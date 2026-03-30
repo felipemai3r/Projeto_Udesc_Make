@@ -21,32 +21,73 @@ const projetosFormatados = projetos.map(p => ({
 <Layout title="Início">
 
   <!-- HERO -->
-  <section class="bg-gray-50 px-8 py-16">
-    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12">
-      <div class="flex-1">
-        <h1 class="text-5xl font-bold text-gray-900 leading-tight">
+<section class="px-8 pt-10">
+  <div class="relative max-w-6xl mx-auto overflow-hidden rounded-3xl min-h-[420px] md:min-h-[500px] shadow-xl bg-gray-900">
+
+    <!-- Vídeo A -->
+    <video
+      id="hero-video-a"
+      autoplay
+      muted
+      loop
+      playsinline
+      class="absolute inset-0 w-full h-full object-cover opacity-80 transition-opacity duration-[2000ms] ease-in-out scale-105"
+    >
+      <source src="/videos/video1.mp4" type="video/mp4" />
+    </video>
+
+    <!-- Vídeo B -->
+    <video
+      id="hero-video-b"
+      autoplay
+      muted
+      loop
+      playsinline
+      class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-[2000ms] ease-in-out scale-105"
+    >
+      <source src="/videos/video2.mp4" type="video/mp4" />
+    </video>
+
+    <!-- Camada de suavização -->
+    <div class="absolute inset-0 backdrop-blur-[3px]"></div>
+
+    <!-- Camada escura -->
+    <div class="absolute inset-0 bg-white/55"></div>
+
+    <!-- Gradiente para dar profundidade -->
+    <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/45 to-black/25"></div>
+
+    <!-- Conteúdo -->
+    <div class="relative z-10 flex items-center min-h-[420px] md:min-h-[500px] px-8 md:px-16 py-12">
+      <div class="max-w-2xl">
+        <h1 class="text-5xl md:text-6xl font-bold text-white leading-tight">
           Explore. Crie.<br/>
-          <span class="text-green-600">Compartilhe.</span>
+          <span class="text-green-400">Compartilhe.</span>
         </h1>
-        <p class="mt-4 text-gray-600 text-lg">
-          A plataforma de projetos maker da UDESC e da comunidade, a melhor forma de aprender
+
+        <p class="mt-4 text-gray-100 text-lg md:text-xl">
+          A plataforma de projetos maker da UDESC e da comunidade, onde aprender acontece na prática.
         </p>
-        <div class="mt-8 flex gap-4">
-          <a href="#projetos" class="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+
+        <div class="mt-8 flex flex-wrap gap-4">
+          <a
+            href="#projetos"
+            class="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+          >
             Explore Projetos
           </a>
-          <a href="/contribuir" class="border border-gray-300 hover:border-green-700 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors">
+
+          <a
+            href="/contribuir"
+            class="border border-white/40 hover:border-white text-white px-6 py-3 rounded-lg font-medium transition-colors bg-white/10 hover:bg-white/15"
+          >
             Como Contribuir
           </a>
         </div>
       </div>
-      <div class="flex-1 flex justify-center">
-        <div class="w-80 h-64 bg-green-100 rounded-2xl flex items-center justify-center text-green-400 text-sm">
-          [ imagem hero ]
-        </div>
-      </div>
     </div>
-  </section>
+  </div>
+</section>
 
   <!-- BUSCA E FILTROS -->
   <section id="projetos" class="max-w-6xl mx-auto px-8 mt-12">
@@ -391,12 +432,69 @@ const projetosFormatados = projetos.map(p => ({
     })
   })
 
-  // ── INIT ──────────────────────────────────────────────
-  ativarChip('chips-categoria', 'Todos')
-  ativarChip('chips-nivel', 'Todos')
-  ativarChip('chips-duracao', 'Todos')
-  ativarChip('chips-idade', 'Todos')
-  document.querySelector('.chip-por-pagina[data-n="6"]')?.setAttribute('style', 'background:#166534; color:white; border-color:#166534; padding:4px 12px; border-radius:999px; font-size:0.875rem; border-width:1px; border-style:solid; cursor:pointer;')
+ // ── INIT ──────────────────────────────────────────────
+ativarChip('chips-categoria', 'Todos')
+ativarChip('chips-nivel', 'Todos')
+ativarChip('chips-duracao', 'Todos')
+ativarChip('chips-idade', 'Todos')
 
-  renderizar()
+document.querySelector('.chip-por-pagina[data-n="6"]')?.setAttribute(
+  'style',
+  'background:#166534; color:white; border-color:#166534; padding:4px 12px; border-radius:999px; font-size:0.875rem; border-width:1px; border-style:solid; cursor:pointer;'
+)
+
+renderizar()
+
+// ── HERO VIDEO ───────────────────────────────────────
+const heroVideos = [
+  "/videos/video1.mp4",
+  "/videos/video2.mp4",
+  "/videos/video3.mp4",
+  "/videos/video4.mp4",
+  "/videos/video5.mp4"
+]
+
+const videoA = document.getElementById("hero-video-a")
+const videoB = document.getElementById("hero-video-b")
+
+let videoAtualIndex = 1
+let mostrandoA = true
+
+function prepararVideo(video, src) {
+  if (!video) return
+
+  video.pause()
+  video.src = src
+  video.load()
+
+  video.onloadeddata = () => {
+    video.currentTime = 0
+    video.play().catch(() => {})
+  }
+}
+
+function trocarHeroVideosComFade() {
+  if (!videoA || !videoB) return
+
+  const videoVisivel = mostrandoA ? videoA : videoB
+  const videoOculto = mostrandoA ? videoB : videoA
+
+  videoAtualIndex = (videoAtualIndex + 1) % heroVideos.length
+  const proximoSrc = heroVideos[videoAtualIndex]
+
+  prepararVideo(videoOculto, proximoSrc)
+
+  setTimeout(() => {
+    videoOculto.classList.remove("opacity-0")
+    videoOculto.classList.add("opacity-80")
+
+    videoVisivel.classList.remove("opacity-80")
+    videoVisivel.classList.add("opacity-0")
+
+    mostrandoA = !mostrandoA
+  }, 300)
+}
+
+setInterval(trocarHeroVideosComFade, 9000)
+
 </script>
