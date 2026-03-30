@@ -1,69 +1,25 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import { getCollection, getEntry, render } from "astro:content";
 
-export function getStaticPaths() {
-    return [
-        { params: { slug: "horta-inteligente" } },
-        { params: { slug: "robo-seguidor" } },
-        { params: { slug: "caixinha-musica" } },
-    ];
+export async function getStaticPaths() {
+    const projetos = await getCollection("projetos");
+    return projetos.map((entry) => ({
+        params: {
+            slug: entry.id.replace("/index.md", "").replace("\\index.md", ""),
+        },
+        props: { entryId: entry.id },
+    }));
 }
 
-const { slug } = Astro.params;
+const { entryId } = Astro.props;
+const projeto = await getEntry("projetos", entryId);
 
-const projeto = {
-    slug: "horta-inteligente",
-    titulo: "Horta Inteligente com Sensor de Umidade",
-    resumo: "Monte uma horta automatizada que monitora a umidade do solo e rega automaticamente suas plantas usando Arduino e sensores.",
-    descricao:
-        "Este projeto é ideal para quem quer aprender na prática os conceitos de eletrônica de forma acessível e divertida. Todos os materiais são facilmente encontrados em lojas de eletrônica ou online.",
-    autor: "Felipe Silva",
-    data: "01-11-2025",
-    duracao: "1 dia",
-    nivel: "Avançado",
-    idade: "+18 Anos",
-    categoria: "Eletrônica",
-    tags: ["Arduino", "plantação"],
-    materiais: [
-        "Arduino Uno R3",
-        "Sensores infravermelhos (x2)",
-        "Driver motor L298N",
-        "Motores DC (x2)",
-        "Chassi de acrílico",
-        "Rodas (x2) + rodabolos",
-        "Jumpers e protoboard",
-        "Bateria 9v",
-    ],
-    passos: [
-        {
-            titulo: "Montar o chassi",
-            descricao:
-                "Fixe os motores DC no chassi de acrílico usando parafusos. Instale as rodas e a rodabolsa na parte traseira.",
-        },
-        {
-            titulo: "Conectar o driver de motor",
-            descricao:
-                "Ligue o driver L298N aos motores DC e conecte a alimentação da bateria 9V.",
-        },
-        {
-            titulo: "Instalar os sensores",
-            descricao:
-                "Posicione os sensores infravermelhos na parte frontal do robô, apontados para o chão.",
-        },
-        {
-            titulo: "Programar o Arduino",
-            descricao:
-                "Carregue o código que lê os sensores e controla os motores para seguir a linha preta.",
-        },
-        {
-            titulo: "Testar e calibrar",
-            descricao:
-                "Coloque o robô sobre uma pista com fita isolante preta e ajuste a sensibilidade dos sensores.",
-        },
-    ],
-    resultadoFinal:
-        "Ao final deste projeto, você terá uma horta inteligente com sensor de umidade totalmente funcional, pronto para demonstrações e apresentações na comunidade maker da UDESC.",
-};
+if (!projeto) return Astro.redirect("/404");
+
+const { Content } = await render(projeto);
+
+const { title, autor, data, categoria, dificuldade, duracao, idade, capa, tags } = projeto.data;
 
 const nivelCor: Record<string, string> = {
     Iniciante: "text-green-600",
@@ -72,12 +28,18 @@ const nivelCor: Record<string, string> = {
 };
 ---
 
-<Layout title={projeto.titulo}>
+<Layout title={title}>
     <!-- HERO -->
     <section
         class="relative min-h-[200px] bg-green-800 overflow-hidden flex items-end"
     >
-        <!-- se tiver imagem de capa, ela entra aqui como background -->
+        {capa && (
+            <img
+                src={capa}
+                alt={title}
+                class="absolute inset-0 w-full h-full object-cover opacity-40"
+            />
+        )}
         <div
             class="absolute inset-0 bg-gradient-to-t from-green-900/90 to-green-800/60"
         >
@@ -102,7 +64,7 @@ const nivelCor: Record<string, string> = {
                     </svg>
                 </div>
                 <h1 class="text-white text-2xl font-bold leading-snug">
-                    {projeto.titulo}
+                    {title}
                 </h1>
             </div>
         </div>
@@ -114,11 +76,9 @@ const nivelCor: Record<string, string> = {
         <nav class="text-sm text-gray-400 mb-6">
             <a href="/" class="hover:text-green-700 transition-colors">Home</a>
             <span class="mx-2">›</span>
-            <a href="/" class="hover:text-green-700 transition-colors"
-                >Projetos</a
-            >
+            <a href="/#projetos" class="hover:text-green-700 transition-colors">Projetos</a>
             <span class="mx-2">›</span>
-            <span class="text-gray-600">{projeto.titulo}</span>
+            <span class="text-gray-600">{title}</span>
         </nav>
 
         <!-- METADADOS + BOTÕES -->
@@ -142,7 +102,7 @@ const nivelCor: Record<string, string> = {
                             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                         ></path>
                     </svg>
-                    {projeto.autor}
+                    {autor}
                 </span>
                 <span class="flex items-center gap-1">
                     <svg
@@ -158,7 +118,7 @@ const nivelCor: Record<string, string> = {
                             d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         ></path>
                     </svg>
-                    {projeto.data}
+                    {data}
                 </span>
                 <span class="flex items-center gap-1">
                     <svg
@@ -174,15 +134,18 @@ const nivelCor: Record<string, string> = {
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                         ></path>
                     </svg>
-                    {projeto.duracao}
+                    {duracao}
                 </span>
-                <span class={`font-semibold ${nivelCor[projeto.nivel]}`}>
-                    Nível: {projeto.nivel}
+                <span class={`font-semibold ${nivelCor[dificuldade] ?? "text-gray-500"}`}>
+                    Nível: {dificuldade}
                 </span>
-                <span
-                    class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600"
-                >
-                    {projeto.idade}
+                {idade && (
+                    <span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600">
+                        {idade}
+                    </span>
+                )}
+                <span class="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">
+                    {categoria}
                 </span>
             </div>
 
@@ -205,107 +168,25 @@ const nivelCor: Record<string, string> = {
                     </svg>
                     Compartilhar
                 </button>
-                <button
-                    class="flex items-center gap-2 border border-green-600 text-green-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-50 transition-colors"
-                >
-                    <svg
-                        class="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                        ></path>
-                    </svg>
-                    Baixar Manual
-                </button>
             </div>
         </div>
 
-        <!-- SOBRE O PROJETO -->
-        <section class="mb-10">
-            <h2 class="text-lg font-bold text-gray-900  mt-4 mb-3">
-                Sobre o Projeto
-            </h2>
-            <p class="text-gray-600 leading-relaxed">{projeto.resumo}</p>
-            <p class="text-gray-600 leading-relaxed mt-2">
-                {projeto.descricao}
-            </p>
-        </section>
-
-        <!-- MATERIAIS -->
-        <section class="mb-10">
-            <h2 class="text-lg font-bold text-gray-900 mt-4 mb-4">
-                Materiais Necessários
-            </h2>
-            <ul class="space-y-3">
-                {
-                    projeto.materiais.map((m) => (
-                        <li class="flex items-center gap-3 text-gray-600 text-sm">
-                            <input
-                                type="checkbox"
-                                class="accent-green-600 w-4 h-4 flex-shrink-0"
-                            />
-                            {m}
-                        </li>
-                    ))
-                }
-            </ul>
-        </section>
-
-        <!-- PASSO A PASSO -->
-        <section class="mb-10">
-        <h2 class="text-lg font-bold text-gray-900 mt-4 mb-6">Passo a Passo</h2>
-        <div class="space-y-10">
-            {projeto.passos.map((passo, i) => (
-            <div class="flex gap-6">
-                
-                <!-- Coluna do número -->
-                <div class="flex flex-col items-center gap-2 flex-shrink-0">
-                <span style="width: 20px; height: 30px; min-width: 30px;" class="rounded-full bg-green-600 text-white text-sm font-bold flex items-center justify-center">
-                    {i + 1}
-                </span>
-                <!-- linha vertical conectando os passos -->
-                {i < projeto.passos.length - 1 && (
-                    <div class="w-px flex-1 bg-green-100 min-h-[60px]"></div>
-                )}
-                </div>
-
-                <!-- Coluna do conteúdo -->
-                <div class="flex-1 pb-2">
-                <h3 class="font-semibold text-green-700 mb-2">{passo.titulo}</h3>
-                <p class="text-gray-600 text-sm mb-4">{passo.descricao}</p>
-                <div class="bg-gray-100 rounded-xl h-44 flex items-center justify-center text-gray-400 text-xs">
-                    [ imagem do passo ]
-                </div>
-                </div>
-
-            </div>
-            ))}
-        </div>
-        </section>
-
-        <!-- RESULTADO FINAL -->
-        <section class="mb-10">
-            <h2 class="text-lg font-bold text-gray-900 mt-4 mb-3">
-                Resultado Final
-            </h2>
-            <div
-                class="bg-gray-100 rounded-xl h-52 flex items-center justify-center text-gray-400 text-xs mb-4"
-            >
-                [ imagem resultado final ]
-            </div>
-            <p class="text-gray-600 text-sm">{projeto.resultadoFinal}</p>
-        </section>
+        <!-- CONTEÚDO DO MARKDOWN -->
+        <article class="prose prose-green max-w-none mb-10
+            prose-headings:text-gray-900
+            prose-h2:text-lg prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-3
+            prose-h3:text-base prose-h3:font-semibold prose-h3:text-green-700 prose-h3:mb-2
+            prose-p:text-gray-600 prose-p:leading-relaxed prose-p:text-sm
+            prose-li:text-gray-600 prose-li:text-sm
+            prose-ul:space-y-2
+        ">
+            <Content />
+        </article>
 
         <!-- TAGS -->
-        <div class="flex gap-3 flex-wrap pb-4">
+        <div class="flex gap-3 flex-wrap pb-4 border-t border-gray-100 pt-4">
             {
-                projeto.tags.map((tag) => (
+                tags.map((tag) => (
                     <span class="text-green-700 text-sm font-medium">
                         #{tag}
                     </span>

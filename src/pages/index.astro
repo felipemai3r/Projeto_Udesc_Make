@@ -1,5 +1,27 @@
 ---
 import Layout from '../layouts/Layout.astro'
+import { getCollection } from 'astro:content'
+
+const projetos = await getCollection('projetos')
+
+// Debug — vamos ver o que o Astro está retornando
+console.log('Total de projetos:', projetos.length)
+console.log('IDs:', projetos.map(p => p.id))
+
+const projetosFormatados = projetos.map(p => ({
+  slug: p.id.replace('/index.md', '').replace('\\index.md', ''),
+  titulo: p.data.title,
+  resumo: p.data.resumo,
+  categoria: p.data.categoria,
+  nivel: p.data.dificuldade,
+  duracao: p.data.duracao,
+  idade: p.data.idade || 'Todos',
+  autor: p.data.autor,
+  capa: p.data.capa || '',
+  tags: p.data.tags,
+}))
+
+console.log('Projetos formatados:', projetosFormatados)
 ---
 
 <Layout title="Início">
@@ -41,17 +63,16 @@ import Layout from '../layouts/Layout.astro'
         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
-        <input 
+        <input
           id="busca"
-          type="text" 
-          placeholder="Buscar Projetos" 
+          type="text"
+          placeholder="Buscar Projetos"
           class="flex-1 outline-none text-gray-700 placeholder-gray-400"
         />
       </div>
-      <button 
+      <button
         id="btn-filtros"
-        class="bg-green-700 hover:bg-green-800 text-white px-5 py-3 rounded-lg font-medium transition-colors"
-      >
+        class="bg-green-700 hover:bg-green-800 text-white px-5 py-3 rounded-lg font-medium transition-colors">
         Filtros
       </button>
     </div>
@@ -59,18 +80,17 @@ import Layout from '../layouts/Layout.astro'
     <!-- Chips de categoria -->
     <div class="flex flex-wrap gap-2 mb-4" id="chips-categoria">
       {['Todos', 'Eletrônica', 'Robótica', 'Impressão 3D', 'Programação', 'Marcenaria', 'Costura', 'Culinária', 'Arte', 'Outros'].map((cat) => (
-        <button 
+        <button
           class="chip-categoria px-4 py-1.5 rounded-full text-sm font-medium border transition-colors"
-          data-categoria={cat}
-        >
+          data-categoria={cat}>
           {cat}
         </button>
       ))}
     </div>
 
-    <!-- Filtros expandidos (ocultos por padrão) -->
+    <!-- Filtros expandidos -->
     <div id="filtros-expandidos" class="hidden bg-white border border-gray-200 rounded-xl p-5 mb-6 space-y-4">
-      
+
       <div class="flex flex-wrap items-center gap-3">
         <span class="text-sm font-semibold text-gray-700 w-28">Nível</span>
         <div class="flex flex-wrap gap-2" id="chips-nivel">
@@ -105,7 +125,6 @@ import Layout from '../layouts/Layout.astro'
 
     <!-- Grid de cards -->
     <div id="grid-projetos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- cards gerados via JS -->
     </div>
 
   </section>
@@ -121,128 +140,130 @@ import Layout from '../layouts/Layout.astro'
 
 </Layout>
 
-<script>
-// Dados de exemplo — depois virão dos arquivos .md
-const projetos = [
-  { slug: 'robo-seguidor', titulo: 'Robô Seguidor de Linha com Arduino', resumo: 'Construa um robô que segue uma linha preta no chão usando sensores infravermelhos.', categoria: 'Robótica', nivel: 'Intermediário', duracao: '1 dia', idade: '+10 Anos', autor: 'Felipe Silva' },
-  { slug: 'horta-inteligente', titulo: 'Horta Inteligente com Sensor de Umidade', resumo: 'Monte uma horta automatizada que monitora a umidade do solo e rega suas plantas.', categoria: 'Eletrônica', nivel: 'Avançado', duracao: '+1 dia', idade: '+18 Anos', autor: 'Thaiane Costa' },
-  { slug: 'caixinha-musica', titulo: 'Caixinha de Música com Impressão 3D', resumo: 'Projete e imprima uma caixinha de música decorativa com peças 3D.', categoria: 'Impressão 3D', nivel: 'Iniciante', duracao: 'Meio dia', idade: '+5 Anos', autor: 'Diogo Lima' },
-  { slug: 'app-tarefas', titulo: 'App de Lista de Tarefas em Python', resumo: 'Crie um aplicativo de linha de comando para gerenciar suas tarefas diárias.', categoria: 'Programação', nivel: 'Iniciante', duracao: '1-3 horas', idade: '+15 Anos', autor: 'Felipe Silva' },
-  { slug: 'carrinho-friccao', titulo: 'Carrinho de Fricção', resumo: 'Monte um carrinho de brinquedo funcional usando materiais simples e recicláveis.', categoria: 'Marcenaria', nivel: 'Iniciante', duracao: '-1hora', idade: '+5 Anos', autor: 'Thaiane Costa' },
-  { slug: 'luz-batata', titulo: 'Luz com Batata - Elétrica Básica', resumo: 'Descubra como gerar eletricidade usando uma batata e acender um LED.', categoria: 'Eletrônica', nivel: 'Iniciante', duracao: '-30 Minutos', idade: '+5 Anos', autor: 'Diogo Lima' },
-]
+<script define:vars={{ projetosFormatados }}>
+  const projetos = projetosFormatados
 
-const coresNivel: Record<string, string> = {
-  'Iniciante': 'text-green-600',
-  'Intermediário': 'text-yellow-600',
-  'Avançado': 'text-red-500',
-}
+  const coresNivel = {
+    'Iniciante': 'color:#16a34a',
+    'Intermediário': 'color:#d97706',
+    'Avançado': 'color:#ef4444',
+  }
 
-function criarCard(p: typeof projetos[0]) {
-  return `
-    <a href="/projetos/${p.slug}" class="bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow block">
-      <div class="bg-green-100 h-44 flex items-center justify-center text-green-400 text-xs">[ imagem ]</div>
-      <div class="p-4">
-        <div class="flex items-center gap-2 mb-2">
-          <span class="text-xs font-semibold ${coresNivel[p.nivel] || 'text-gray-500'}">● ${p.nivel}</span>
+  function criarCard(p) {
+    const corNivel = coresNivel[p.nivel] || 'color:#6b7280'
+    const imagemHtml = p.capa
+      ? `<img src="${p.capa}" alt="${p.titulo}" style="width:100%; height:176px; object-fit:cover;" />`
+      : `<div style="height:176px; background:#d1fae5; display:flex; align-items:center; justify-content:center; color:#6ee7b7; font-size:0.75rem;">[ imagem ]</div>`
+
+    return `
+      <a href="/projetos/${p.slug}" style="background:white; border-radius:12px; overflow:hidden; border:1px solid #f3f4f6; display:block; text-decoration:none; transition:box-shadow 0.2s;"
+        onmouseover="this.style.boxShadow='0 10px 25px rgba(0,0,0,0.1)'"
+        onmouseout="this.style.boxShadow='none'">
+        ${imagemHtml}
+        <div style="padding:16px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <span style="font-size:0.75rem; font-weight:600; ${corNivel}">● ${p.nivel}</span>
+          </div>
+          <h3 style="font-weight:700; color:#111827; font-size:0.875rem; line-height:1.4; margin:0 0 4px 0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${p.titulo}</h3>
+          <p style="color:#6b7280; font-size:0.75rem; line-height:1.4; margin:0 0 12px 0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${p.resumo}</p>
+          <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.75rem; color:#9ca3af;">
+            <span>👤 ${p.autor}</span>
+            <span>⏱ ${p.duracao}</span>
+          </div>
         </div>
-        <h3 class="font-bold text-gray-900 text-sm leading-snug mb-1 line-clamp-2">${p.titulo}</h3>
-        <p class="text-gray-500 text-xs line-clamp-2 mb-3">${p.resumo}</p>
-        <div class="flex items-center justify-between text-xs text-gray-400">
-          <span>👤 ${p.autor}</span>
-          <span>⏱ ${p.duracao}</span>
-        </div>
-      </div>
-    </a>
-  `
-}
+      </a>
+    `
+  }
 
-// Estado dos filtros
-let filtros = { categoria: 'Todos', nivel: 'Todos', duracao: 'Todos', idade: 'Todos', busca: '' }
+  // Estado dos filtros
+  let filtros = { categoria: 'Todos', nivel: 'Todos', duracao: 'Todos', idade: 'Todos', busca: '' }
 
-function renderizar() {
-  const filtrados = projetos.filter(p => {
-    const okCategoria = filtros.categoria === 'Todos' || p.categoria === filtros.categoria
-    const okNivel = filtros.nivel === 'Todos' || p.nivel === filtros.nivel
-    const okDuracao = filtros.duracao === 'Todos' || p.duracao === filtros.duracao
-    const okIdade = filtros.idade === 'Todos' || p.idade === filtros.idade
-    const okBusca = filtros.busca === '' || p.titulo.toLowerCase().includes(filtros.busca.toLowerCase()) || p.resumo.toLowerCase().includes(filtros.busca.toLowerCase())
-    return okCategoria && okNivel && okDuracao && okIdade && okBusca
+  function renderizar() {
+    const filtrados = projetos.filter(p => {
+      const okCategoria = filtros.categoria === 'Todos' || p.categoria === filtros.categoria
+      const okNivel = filtros.nivel === 'Todos' || p.nivel === filtros.nivel
+      const okDuracao = filtros.duracao === 'Todos' || p.duracao === filtros.duracao
+      const okIdade = filtros.idade === 'Todos' || p.idade === filtros.idade
+      const okBusca = filtros.busca === '' ||
+        p.titulo.toLowerCase().includes(filtros.busca.toLowerCase()) ||
+        p.resumo.toLowerCase().includes(filtros.busca.toLowerCase()) ||
+        p.tags.some(t => t.toLowerCase().includes(filtros.busca.toLowerCase()))
+      return okCategoria && okNivel && okDuracao && okIdade && okBusca
+    })
+
+    const grid = document.getElementById('grid-projetos')
+    const contagem = document.getElementById('contagem')
+    grid.innerHTML = filtrados.map(criarCard).join('')
+    contagem.textContent = `${filtrados.length} Projeto${filtrados.length !== 1 ? 's' : ''} encontrado${filtrados.length !== 1 ? 's' : ''}`
+  }
+
+  function ativarChip(grupoId, valor) {
+    document.querySelectorAll(`#${grupoId} button`).forEach(btn => {
+      const ativo = btn.textContent.trim() === valor
+      if (ativo) {
+        btn.style.cssText = 'background:#166534; color:white; border-color:#166534; padding:4px 16px; border-radius:999px; font-size:0.875rem; font-weight:500; border-width:1px; border-style:solid;'
+      } else {
+        btn.style.cssText = 'background:white; color:#4b5563; border-color:#e5e7eb; padding:4px 16px; border-radius:999px; font-size:0.875rem; font-weight:500; border-width:1px; border-style:solid;'
+      }
+    })
+  }
+
+  // Categoria
+  document.querySelectorAll('#chips-categoria button').forEach(btn => {
+    btn.style.cssText = 'background:white; color:#4b5563; border-color:#e5e7eb; padding:6px 16px; border-radius:999px; font-size:0.875rem; font-weight:500; border-width:1px; border-style:solid;'
+    btn.addEventListener('click', () => {
+      filtros.categoria = btn.dataset.categoria || 'Todos'
+      ativarChip('chips-categoria', filtros.categoria)
+      renderizar()
+    })
   })
 
-  const grid = document.getElementById('grid-projetos')!
-  const contagem = document.getElementById('contagem')!
-  grid.innerHTML = filtrados.map(criarCard).join('')
-  contagem.textContent = `${filtrados.length} Projeto${filtrados.length !== 1 ? 's' : ''} encontrado${filtrados.length !== 1 ? 's' : ''}`
-}
-
-function ativarChip(grupoId: string, valor: string, chave: keyof typeof filtros) {
-  document.querySelectorAll(`#${grupoId} button`).forEach(btn => {
-    const ativo = (btn as HTMLElement).dataset[chave.replace('chip-', '')] === valor || btn.textContent?.trim() === valor
-    btn.className = btn.className.replace(/bg-green-700 text-white border-green-700|border-gray-200 text-gray-600/g, '')
-    if (ativo) {
-      btn.classList.add('bg-green-700', 'text-white', 'border-green-700')
-      btn.classList.remove('border-gray-200', 'text-gray-600')
-    } else {
-      btn.classList.add('border-gray-200', 'text-gray-600')
-      btn.classList.remove('bg-green-700', 'text-white', 'border-green-700')
-    }
+  // Nível
+  document.querySelectorAll('#chips-nivel button').forEach(btn => {
+    btn.style.cssText = 'background:white; color:#4b5563; border-color:#e5e7eb; padding:4px 12px; border-radius:999px; font-size:0.875rem; border-width:1px; border-style:solid;'
+    btn.addEventListener('click', () => {
+      filtros.nivel = btn.textContent.trim()
+      ativarChip('chips-nivel', filtros.nivel)
+      renderizar()
+    })
   })
-}
 
-// Inicializar chips
-document.querySelectorAll('#chips-categoria button').forEach(btn => {
-  btn.classList.add('border-gray-200', 'text-gray-600')
-  btn.addEventListener('click', () => {
-    filtros.categoria = (btn as HTMLElement).dataset.categoria || 'Todos'
-    ativarChip('chips-categoria', filtros.categoria, 'categoria')
+  // Duração
+  document.querySelectorAll('#chips-duracao button').forEach(btn => {
+    btn.style.cssText = 'background:white; color:#4b5563; border-color:#e5e7eb; padding:4px 12px; border-radius:999px; font-size:0.875rem; border-width:1px; border-style:solid;'
+    btn.addEventListener('click', () => {
+      filtros.duracao = btn.textContent.trim()
+      ativarChip('chips-duracao', filtros.duracao)
+      renderizar()
+    })
+  })
+
+  // Idade
+  document.querySelectorAll('#chips-idade button').forEach(btn => {
+    btn.style.cssText = 'background:white; color:#4b5563; border-color:#e5e7eb; padding:4px 12px; border-radius:999px; font-size:0.875rem; border-width:1px; border-style:solid;'
+    btn.addEventListener('click', () => {
+      filtros.idade = btn.textContent.trim()
+      ativarChip('chips-idade', filtros.idade)
+      renderizar()
+    })
+  })
+
+  // Busca
+  document.getElementById('busca')?.addEventListener('input', (e) => {
+    filtros.busca = e.target.value
     renderizar()
   })
-})
 
-document.querySelectorAll('#chips-nivel button').forEach(btn => {
-  btn.classList.add('border-gray-200', 'text-gray-600')
-  btn.addEventListener('click', () => {
-    filtros.nivel = btn.textContent?.trim() || 'Todos'
-    ativarChip('chips-nivel', filtros.nivel, 'nivel')
-    renderizar()
+  // Toggle filtros
+  document.getElementById('btn-filtros')?.addEventListener('click', () => {
+    document.getElementById('filtros-expandidos')?.classList.toggle('hidden')
   })
-})
 
-document.querySelectorAll('#chips-duracao button').forEach(btn => {
-  btn.classList.add('border-gray-200', 'text-gray-600')
-  btn.addEventListener('click', () => {
-    filtros.duracao = btn.textContent?.trim() || 'Todos'
-    ativarChip('chips-duracao', filtros.duracao, 'duracao')
-    renderizar()
-  })
-})
+  // Ativar "Todos" por padrão
+  ativarChip('chips-categoria', 'Todos')
+  ativarChip('chips-nivel', 'Todos')
+  ativarChip('chips-duracao', 'Todos')
+  ativarChip('chips-idade', 'Todos')
 
-document.querySelectorAll('#chips-idade button').forEach(btn => {
-  btn.classList.add('border-gray-200', 'text-gray-600')
-  btn.addEventListener('click', () => {
-    filtros.idade = btn.textContent?.trim() || 'Todos'
-    ativarChip('chips-idade', filtros.idade, 'nivel')
-    renderizar()
-  })
-})
-
-// Busca
-document.getElementById('busca')?.addEventListener('input', (e) => {
-  filtros.busca = (e.target as HTMLInputElement).value
   renderizar()
-})
-
-// Toggle filtros
-document.getElementById('btn-filtros')?.addEventListener('click', () => {
-  document.getElementById('filtros-expandidos')?.classList.toggle('hidden')
-})
-
-// Ativar "Todos" por padrão em todos os grupos
-ativarChip('chips-categoria', 'Todos', 'categoria')
-ativarChip('chips-nivel', 'Todos', 'nivel')
-ativarChip('chips-duracao', 'Todos', 'duracao')
-ativarChip('chips-idade', 'Todos', 'idade')
-
-renderizar()
 </script>
