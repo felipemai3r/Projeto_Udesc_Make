@@ -24,10 +24,7 @@ aa
 ### Passo 2: ass
 sasa
 ![Imagem do passo 2](/projetos/aaaa/passo-2.png)
-<a href="/projetos/aaaa/codigo.php" download 
-  style="display:inline-flex; align-items:center; gap:8px; background:#166534; color:white; padding:10px 20px; border-radius:8px; font-size:0.875rem; font-weight:600; text-decoration:none; margin:12px 0;">
-  ⬇️ Baixar código fonte (.php)
-</a>
+📄 [Baixar código fonte](/projetos/robo-seguidor/codigo.php)
 
 
 ### Passo 3: asa

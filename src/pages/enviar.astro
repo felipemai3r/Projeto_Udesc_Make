@@ -178,7 +178,6 @@ import Layout from '../layouts/Layout.astro'
         </label>
       </div>
 
-      <!-- DOIS BOTÕES DE ENVIO -->
       <div class="grid grid-cols-2 gap-4">
         <button id="btn-baixar-zip"
           class="flex items-center justify-center gap-2 border-2 border-green-600 text-green-700 hover:bg-green-50 py-4 rounded-xl font-semibold text-sm transition-colors">
@@ -196,9 +195,7 @@ import Layout from '../layouts/Layout.astro'
         </button>
       </div>
 
-      <!-- STATUS DO ENVIO -->
       <div id="status-envio" class="hidden mt-4 p-4 rounded-lg text-sm"></div>
-
     </div>
 
     <!-- NAVEGAÇÃO -->
@@ -230,7 +227,14 @@ import Layout from '../layouts/Layout.astro'
   let etapaAtual = 1
   const totalEtapas = 4
   let tags: string[] = []
-  let passos: { titulo: string; descricao: string; arquivo: File | null; url: string }[] = []
+  let passos: {
+    titulo: string
+    descricao: string
+    arquivo: File | null
+    url: string
+    anexo: File | null
+    anexoNome: string
+  }[] = []
   let capaFile: File | null = null
 
   // ── HELPERS ───────────────────────────────────────────
@@ -362,18 +366,21 @@ import Layout from '../layouts/Layout.astro'
   function salvarPassosDoDOM() {
     document.querySelectorAll('.passo-item').forEach((el, i) => {
       const fileInput = el.querySelector('.passo-file') as HTMLInputElement
+      const anexoInput = el.querySelector('.passo-anexo-file') as HTMLInputElement
       passos[i] = {
         titulo: (el.querySelector('.passo-titulo') as HTMLInputElement)?.value || '',
         descricao: (el.querySelector('.passo-descricao') as HTMLTextAreaElement)?.value || '',
         url: (el.querySelector('.passo-url') as HTMLInputElement)?.value || '',
         arquivo: fileInput?.files?.[0] || passos[i]?.arquivo || null,
+        anexo: anexoInput?.files?.[0] || passos[i]?.anexo || null,
+        anexoNome: passos[i]?.anexoNome || '',
       }
     })
   }
 
   function adicionarPasso() {
     salvarPassosDoDOM()
-    passos.push({ titulo: '', descricao: '', arquivo: null, url: '' })
+    passos.push({ titulo: '', descricao: '', arquivo: null, url: '', anexo: null, anexoNome: '' })
     renderizarPassos()
   }
 
@@ -389,10 +396,12 @@ import Layout from '../layouts/Layout.astro'
             ${passos.length > 1 ? `<button class="btn-remover text-red-400 hover:text-red-600 ml-1" data-index="${i}">🗑</button>` : ''}
           </div>
         </div>
+
         <input type="text" placeholder="Título do passo" value="${p.titulo}"
           class="passo-titulo w-full border border-gray-200 rounded-lg px-4 py-3 text-sm mb-3 outline-none bg-gray-50" />
         <textarea rows="4" placeholder="Descrição do que deve ser feito"
           class="passo-descricao w-full border border-gray-200 rounded-lg px-4 py-3 text-sm mb-3 outline-none bg-gray-50 resize-none">${p.descricao}</textarea>
+
         <label class="block text-sm text-gray-600 mb-1">Imagem da etapa</label>
         <div class="flex gap-2 mb-2">
           <input type="text" placeholder="URL da imagem" value="${p.url}"
@@ -401,29 +410,53 @@ import Layout from '../layouts/Layout.astro'
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
             </svg>
-            Enviar arquivo
+            Enviar imagem
             <input type="file" accept="image/*" class="passo-file hidden" data-index="${i}" />
           </label>
         </div>
         <div class="passo-preview-container" id="passo-preview-${i}">
-          ${p.arquivo ? `<img src="" class="passo-preview-img h-24 rounded-lg object-cover border border-gray-200 mt-1" data-index="${i}" /><p class="text-xs text-gray-400 mt-1">${p.arquivo.name}</p>` : ''}
+          ${p.arquivo ? `<p class="text-xs text-gray-400 mt-1">✓ ${p.arquivo.name}</p>` : ''}
         </div>
+
+        <label class="block text-sm text-gray-600 mb-1 mt-3">
+          Arquivo anexo
+          <span class="text-gray-400 text-xs">(PDF, .ino, .py, .cpp, .zip, etc)</span>
+        </label>
+        <div class="flex gap-2 mb-2">
+          <input type="text" placeholder="Nenhum arquivo selecionado" value="${p.anexoNome}"
+            class="passo-anexo-nome flex-1 border border-gray-200 rounded-lg px-4 py-2 text-sm outline-none bg-gray-50" readonly />
+          <label class="flex items-center gap-1 bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-colors">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+            </svg>
+            Anexar arquivo
+            <input type="file" accept=".pdf,.ino,.py,.js,.cpp,.zip,.txt,.h" class="passo-anexo-file hidden" data-index="${i}" />
+          </label>
+        </div>
+        ${p.anexoNome ? `
+          <div class="flex items-center gap-2 text-xs text-gray-500 mt-1">
+            <span>📎</span>
+            <span>${p.anexoNome}</span>
+          </div>
+        ` : ''}
       </div>
     `).join('')
 
-    // Recarrega previews das imagens já salvas
+    // Preview de imagens já salvas
     passos.forEach((p, i) => {
       if (p.arquivo) {
-        const img = container.querySelector(`[data-index="${i}"].passo-preview-img`) as HTMLImageElement
-        if (img) {
+        const container2 = document.getElementById(`passo-preview-${i}`)
+        if (container2) {
           const reader = new FileReader()
-          reader.onload = (ev) => { img.src = ev.target?.result as string }
+          reader.onload = (ev) => {
+            container2.innerHTML = `<img src="${ev.target?.result}" class="h-24 rounded-lg object-cover border border-gray-200 mt-1" /><p class="text-xs text-gray-400 mt-1">${p.arquivo!.name}</p>`
+          }
           reader.readAsDataURL(p.arquivo)
         }
       }
     })
 
-    // Evento de upload de imagem por passo
+    // Upload de imagem
     container.querySelectorAll('.passo-file').forEach(input => {
       input.addEventListener('change', (e) => {
         salvarPassosDoDOM()
@@ -436,7 +469,20 @@ import Layout from '../layouts/Layout.astro'
       })
     })
 
-    // Remover e mover
+    // Upload de anexo
+    container.querySelectorAll('.passo-anexo-file').forEach(input => {
+      input.addEventListener('change', (e) => {
+        salvarPassosDoDOM()
+        const idx = parseInt((input as HTMLElement).dataset.index || '0')
+        const file = (e.target as HTMLInputElement).files?.[0]
+        if (!file) return
+        passos[idx].anexo = file
+        passos[idx].anexoNome = file.name
+        renderizarPassos()
+      })
+    })
+
+    // Remover passo
     container.querySelectorAll('.btn-remover').forEach(btn => {
       btn.addEventListener('click', () => {
         salvarPassosDoDOM()
@@ -446,6 +492,7 @@ import Layout from '../layouts/Layout.astro'
       })
     })
 
+    // Mover passo
     container.querySelectorAll('.btn-mover').forEach(btn => {
       btn.addEventListener('click', () => {
         salvarPassosDoDOM()
@@ -468,6 +515,8 @@ import Layout from '../layouts/Layout.astro'
     const nivelCor: Record<string, string> = {
       'Avançado': '#ef4444', 'Intermediário': '#d97706', 'Iniciante': '#16a34a',
     }
+    const anexosCount = passos.filter(p => p.anexo).length
+
     document.getElementById('preview-card')!.innerHTML = `
       <h3 style="font-weight:700; font-size:1.1rem; margin-bottom:8px;">${val('titulo') || 'Sem título'}</h3>
       <p style="color:#4b5563; font-size:0.875rem; margin-bottom:8px;">${val('resumo') || '—'}</p>
@@ -482,7 +531,7 @@ import Layout from '../layouts/Layout.astro'
         <span style="background:#f3f4f6; padding:2px 8px; border-radius:999px; font-size:0.75rem;">${val('idade') || '—'}</span>
       </div>
       <div style="border-top:1px solid #f3f4f6; padding-top:12px; font-size:0.8rem; color:#6b7280; display:flex; flex-direction:column; gap:4px;">
-        <span><strong>Passos:</strong> ${passos.length} ${passos.map((p,i) => p.arquivo ? `✓ Passo ${i+1} com imagem` : '').filter(Boolean).join(', ')}</span>
+        <span><strong>Passos:</strong> ${passos.length} | <strong>Com imagem:</strong> ${passos.filter(p => p.arquivo).length} | <strong>Com anexo:</strong> ${anexosCount}</span>
         <span><strong>Capa:</strong> ${capaFile ? capaFile.name : val('capa-url') || 'Sem imagem'}</span>
         <span><strong>Autor:</strong> ${val('autor') || '—'}</span>
         <span><strong>E-mail:</strong> ${val('email') || '—'}</span>
@@ -493,15 +542,22 @@ import Layout from '../layouts/Layout.astro'
   // ── GERAR MARKDOWN ────────────────────────────────────
   function gerarMarkdown(slug: string): string {
     const hoje = new Date().toISOString().split('T')[0]
-    const capaRef = capaFile ? `./capa${capaFile.name.substring(capaFile.name.lastIndexOf('.'))}` : val('capa-url') || ''
+    const capaRef = capaFile
+      ? `./capa${capaFile.name.substring(capaFile.name.lastIndexOf('.'))}`
+      : val('capa-url') || ''
 
     const passosMarkdown = passos.map((p, i) => {
       const imgRef = p.arquivo
         ? `./passo-${i + 1}${p.arquivo.name.substring(p.arquivo.name.lastIndexOf('.'))}`
         : p.url || ''
+
+      const anexoHtml = p.anexo
+        ? `\n<a href="/projetos/${slug}/${p.anexo.name}" download style="display:inline-flex; align-items:center; gap:8px; background:#166534; color:white; padding:10px 20px; border-radius:8px; font-size:0.875rem; font-weight:600; text-decoration:none; margin:12px 0;">⬇️ Baixar arquivo (${p.anexo.name})</a>`
+        : ''
+
       return `### Passo ${i + 1}: ${p.titulo}
 ${p.descricao}
-${imgRef ? `![Imagem do passo ${i + 1}](${imgRef})` : ''}
+${imgRef ? `![Imagem do passo ${i + 1}](${imgRef})` : ''}${anexoHtml}
 `
     }).join('\n')
 
@@ -560,12 +616,15 @@ ${passosMarkdown}
       pasta.file(`capa${ext}`, capaFile)
     }
 
-    // Imagens dos passos — na ordem correta
+    // Imagens e anexos dos passos na ordem correta
     for (let i = 0; i < passos.length; i++) {
       const p = passos[i]
       if (p.arquivo) {
         const ext = p.arquivo.name.substring(p.arquivo.name.lastIndexOf('.'))
         pasta.file(`passo-${i + 1}${ext}`, p.arquivo)
+      }
+      if (p.anexo) {
+        pasta.file(p.anexo.name, p.anexo)
       }
     }
 
@@ -577,14 +636,14 @@ ${passosMarkdown}
     a.click()
     URL.revokeObjectURL(url)
 
-    mostrarStatus(`✓ Arquivo ${slug}.zip baixado! Extraia a pasta e coloque no seu fork do repositório, depois abra um Pull Request.`, 'sucesso')
+    mostrarStatus(`✓ Arquivo ${slug}.zip baixado! Extraia a pasta no fork do repositório e abra um Pull Request.`, 'sucesso')
   })
 
   // ── ENVIAR VIA GITHUB API ─────────────────────────────
   document.getElementById('btn-enviar-github')?.addEventListener('click', async () => {
     if (!verificarTermos()) return
 
-    const TOKEN = ''  //← coloque o token aqui quando tiver
+    const TOKEN = '' // ← coloque o token aqui quando tiver
     if (!TOKEN) {
       mostrarStatus('⚠️ Token do GitHub não configurado. Use o botão "Baixar arquivos" por enquanto.', 'erro')
       return
