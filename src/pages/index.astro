@@ -4,10 +4,6 @@ import { getCollection } from 'astro:content'
 
 const projetos = await getCollection('projetos')
 
-// Debug — vamos ver o que o Astro está retornando
-console.log('Total de projetos:', projetos.length)
-console.log('IDs:', projetos.map(p => p.id))
-
 const projetosFormatados = projetos.map(p => ({
   slug: p.id.replace('/index.md', '').replace('\\index.md', ''),
   titulo: p.data.title,
@@ -20,8 +16,6 @@ const projetosFormatados = projetos.map(p => ({
   capa: p.data.capa || '',
   tags: p.data.tags,
 }))
-
-console.log('Projetos formatados:', projetosFormatados)
 ---
 
 <Layout title="Início">
@@ -120,17 +114,48 @@ console.log('Projetos formatados:', projetosFormatados)
 
     </div>
 
-    <!-- Contagem -->
-    <p class="text-sm text-gray-500 mb-6" id="contagem">0 Projetos encontrados</p>
+    <!-- Contagem + por página -->
+    <div class="flex items-center justify-between mb-6">
+      <p class="text-sm text-gray-500" id="contagem">0 Projetos encontrados</p>
+      <div class="flex items-center gap-2 text-sm text-gray-500">
+        <span>Por página:</span>
+        <div class="flex gap-1" id="chips-por-pagina">
+          {[3, 6, 12, 24, 48].map(n => (
+            <button
+              class="chip-por-pagina px-3 py-1 rounded-full border text-sm transition-colors"
+              data-n={n}>
+              {n}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
 
     <!-- Grid de cards -->
-    <div id="grid-projetos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div id="grid-projetos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    </div>
+
+    <!-- PAGINAÇÃO -->
+    <div id="paginacao" class="flex items-center justify-center gap-1 mb-16 hidden">
+      <button id="btn-anterior-pag"
+        class="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:border-green-600 hover:text-green-700 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <div id="numeros-pagina" class="flex gap-1"></div>
+      <button id="btn-proximo-pag"
+        class="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:border-green-600 hover:text-green-700 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
     </div>
 
   </section>
 
   <!-- CTA FINAL -->
-  <section class="bg-green-800 mt-20 py-16 text-center text-white">
+  <section class="bg-green-800 mt-4 py-16 text-center text-white">
     <h2 class="text-3xl font-bold">Tem um projeto para compartilhar?</h2>
     <p class="mt-2 text-green-200">Contribua com a comunidade maker da UDESC</p>
     <a href="/contribuir" class="mt-6 inline-block bg-white text-green-800 font-semibold px-8 py-3 rounded-lg hover:bg-green-50 transition-colors">
@@ -143,6 +168,12 @@ console.log('Projetos formatados:', projetosFormatados)
 <script define:vars={{ projetosFormatados }}>
   const projetos = projetosFormatados
 
+  // ── ESTADO ────────────────────────────────────────────
+  let filtros = { categoria: 'Todos', nivel: 'Todos', duracao: 'Todos', idade: 'Todos', busca: '' }
+  let paginaAtual = 1
+  let porPagina = 6
+
+  // ── CARD ──────────────────────────────────────────────
   const coresNivel = {
     'Iniciante': 'color:#16a34a',
     'Intermediário': 'color:#d97706',
@@ -175,9 +206,7 @@ console.log('Projetos formatados:', projetosFormatados)
     `
   }
 
-  // Estado dos filtros
-  let filtros = { categoria: 'Todos', nivel: 'Todos', duracao: 'Todos', idade: 'Todos', busca: '' }
-
+  // ── RENDERIZAR ────────────────────────────────────────
   function renderizar() {
     const filtrados = projetos.filter(p => {
       const okCategoria = filtros.categoria === 'Todos' || p.categoria === filtros.categoria
@@ -191,12 +220,96 @@ console.log('Projetos formatados:', projetosFormatados)
       return okCategoria && okNivel && okDuracao && okIdade && okBusca
     })
 
+    const total = filtrados.length
+    const totalPaginas = Math.ceil(total / porPagina)
+    if (paginaAtual > totalPaginas) paginaAtual = 1
+
+    const inicio = (paginaAtual - 1) * porPagina
+    const fim = inicio + porPagina
+    const paginados = filtrados.slice(inicio, fim)
+
     const grid = document.getElementById('grid-projetos')
     const contagem = document.getElementById('contagem')
-    grid.innerHTML = filtrados.map(criarCard).join('')
-    contagem.textContent = `${filtrados.length} Projeto${filtrados.length !== 1 ? 's' : ''} encontrado${filtrados.length !== 1 ? 's' : ''}`
+    const paginacao = document.getElementById('paginacao')
+
+    grid.innerHTML = paginados.map(criarCard).join('')
+
+    const de = total === 0 ? 0 : inicio + 1
+    const ate = Math.min(fim, total)
+    contagem.textContent = total === 0
+      ? '0 Projetos encontrados'
+      : `Mostrando ${de}–${ate} de ${total} projeto${total !== 1 ? 's' : ''}`
+
+    if (totalPaginas <= 1) {
+      paginacao.classList.add('hidden')
+      return
+    }
+
+    paginacao.classList.remove('hidden')
+
+    const numeros = document.getElementById('numeros-pagina')
+    numeros.innerHTML = ''
+
+    const paginas = []
+    if (totalPaginas <= 7) {
+      for (let i = 1; i <= totalPaginas; i++) paginas.push(i)
+    } else {
+      paginas.push(1)
+      if (paginaAtual > 3) paginas.push('...')
+      for (let i = Math.max(2, paginaAtual - 1); i <= Math.min(totalPaginas - 1, paginaAtual + 1); i++) {
+        paginas.push(i)
+      }
+      if (paginaAtual < totalPaginas - 2) paginas.push('...')
+      paginas.push(totalPaginas)
+    }
+
+    paginas.forEach(p => {
+      if (p === '...') {
+        const span = document.createElement('span')
+        span.textContent = '...'
+        span.style.cssText = 'padding:0 4px; color:#9ca3af; display:flex; align-items:center;'
+        numeros.appendChild(span)
+      } else {
+        const btn = document.createElement('button')
+        btn.textContent = String(p)
+        const ativo = p === paginaAtual
+        btn.style.cssText = ativo
+          ? 'width:36px; height:36px; border-radius:8px; font-size:0.875rem; font-weight:600; background:#166534; color:white; border:none; cursor:pointer;'
+          : 'width:36px; height:36px; border-radius:8px; font-size:0.875rem; background:white; color:#374151; border:1px solid #e5e7eb; cursor:pointer;'
+        btn.addEventListener('click', () => {
+          paginaAtual = p
+          renderizar()
+          document.getElementById('projetos')?.scrollIntoView({ behavior: 'smooth' })
+        })
+        numeros.appendChild(btn)
+      }
+    })
+
+    const btnAnt = document.getElementById('btn-anterior-pag')
+    const btnProx = document.getElementById('btn-proximo-pag')
+
+    btnAnt.disabled = paginaAtual === 1
+    btnAnt.style.opacity = paginaAtual === 1 ? '0.3' : '1'
+    btnProx.disabled = paginaAtual === totalPaginas
+    btnProx.style.opacity = paginaAtual === totalPaginas ? '0.3' : '1'
+
+    btnAnt.onclick = () => {
+      if (paginaAtual > 1) {
+        paginaAtual--
+        renderizar()
+        document.getElementById('projetos')?.scrollIntoView({ behavior: 'smooth' })
+      }
+    }
+    btnProx.onclick = () => {
+      if (paginaAtual < totalPaginas) {
+        paginaAtual++
+        renderizar()
+        document.getElementById('projetos')?.scrollIntoView({ behavior: 'smooth' })
+      }
+    }
   }
 
+  // ── CHIPS ESTILO ──────────────────────────────────────
   function ativarChip(grupoId, valor) {
     document.querySelectorAll(`#${grupoId} button`).forEach(btn => {
       const ativo = btn.textContent.trim() === valor
@@ -208,62 +321,82 @@ console.log('Projetos formatados:', projetosFormatados)
     })
   }
 
-  // Categoria
+  // ── CATEGORIA ─────────────────────────────────────────
   document.querySelectorAll('#chips-categoria button').forEach(btn => {
     btn.style.cssText = 'background:white; color:#4b5563; border-color:#e5e7eb; padding:6px 16px; border-radius:999px; font-size:0.875rem; font-weight:500; border-width:1px; border-style:solid;'
     btn.addEventListener('click', () => {
       filtros.categoria = btn.dataset.categoria || 'Todos'
+      paginaAtual = 1
       ativarChip('chips-categoria', filtros.categoria)
       renderizar()
     })
   })
 
-  // Nível
+  // ── NÍVEL ─────────────────────────────────────────────
   document.querySelectorAll('#chips-nivel button').forEach(btn => {
     btn.style.cssText = 'background:white; color:#4b5563; border-color:#e5e7eb; padding:4px 12px; border-radius:999px; font-size:0.875rem; border-width:1px; border-style:solid;'
     btn.addEventListener('click', () => {
       filtros.nivel = btn.textContent.trim()
+      paginaAtual = 1
       ativarChip('chips-nivel', filtros.nivel)
       renderizar()
     })
   })
 
-  // Duração
+  // ── DURAÇÃO ───────────────────────────────────────────
   document.querySelectorAll('#chips-duracao button').forEach(btn => {
     btn.style.cssText = 'background:white; color:#4b5563; border-color:#e5e7eb; padding:4px 12px; border-radius:999px; font-size:0.875rem; border-width:1px; border-style:solid;'
     btn.addEventListener('click', () => {
       filtros.duracao = btn.textContent.trim()
+      paginaAtual = 1
       ativarChip('chips-duracao', filtros.duracao)
       renderizar()
     })
   })
 
-  // Idade
+  // ── IDADE ─────────────────────────────────────────────
   document.querySelectorAll('#chips-idade button').forEach(btn => {
     btn.style.cssText = 'background:white; color:#4b5563; border-color:#e5e7eb; padding:4px 12px; border-radius:999px; font-size:0.875rem; border-width:1px; border-style:solid;'
     btn.addEventListener('click', () => {
       filtros.idade = btn.textContent.trim()
+      paginaAtual = 1
       ativarChip('chips-idade', filtros.idade)
       renderizar()
     })
   })
 
-  // Busca
+  // ── BUSCA ─────────────────────────────────────────────
   document.getElementById('busca')?.addEventListener('input', (e) => {
     filtros.busca = e.target.value
+    paginaAtual = 1
     renderizar()
   })
 
-  // Toggle filtros
+  // ── TOGGLE FILTROS ────────────────────────────────────
   document.getElementById('btn-filtros')?.addEventListener('click', () => {
     document.getElementById('filtros-expandidos')?.classList.toggle('hidden')
   })
 
-  // Ativar "Todos" por padrão
+  // ── POR PÁGINA ────────────────────────────────────────
+  document.querySelectorAll('.chip-por-pagina').forEach(btn => {
+    btn.style.cssText = 'background:white; color:#4b5563; border-color:#e5e7eb; padding:4px 12px; border-radius:999px; font-size:0.875rem; border-width:1px; border-style:solid; cursor:pointer;'
+    btn.addEventListener('click', () => {
+      porPagina = parseInt(btn.dataset.n || '6')
+      paginaAtual = 1
+      document.querySelectorAll('.chip-por-pagina').forEach(b => {
+        b.style.cssText = 'background:white; color:#4b5563; border-color:#e5e7eb; padding:4px 12px; border-radius:999px; font-size:0.875rem; border-width:1px; border-style:solid; cursor:pointer;'
+      })
+      btn.style.cssText = 'background:#166534; color:white; border-color:#166534; padding:4px 12px; border-radius:999px; font-size:0.875rem; border-width:1px; border-style:solid; cursor:pointer;'
+      renderizar()
+    })
+  })
+
+  // ── INIT ──────────────────────────────────────────────
   ativarChip('chips-categoria', 'Todos')
   ativarChip('chips-nivel', 'Todos')
   ativarChip('chips-duracao', 'Todos')
   ativarChip('chips-idade', 'Todos')
+  document.querySelector('.chip-por-pagina[data-n="6"]')?.setAttribute('style', 'background:#166534; color:white; border-color:#166534; padding:4px 12px; border-radius:999px; font-size:0.875rem; border-width:1px; border-style:solid; cursor:pointer;')
 
   renderizar()
 </script>
