@@ -1,0 +1,177 @@
+---
+import Layout from '../layouts/Layout.astro'
+
+const passos = [
+  {
+    numero: 1,
+    icone: '➡️',
+    titulo: 'Fork do Repositório',
+    descricao: 'Acesse o repositório da UDESC Maker no GitHub e clique em "Fork" para criar uma cópia na sua conta.',
+    detalhe: 'Você precisa ter uma conta no GitHub. O fork cria uma cópia do projeto onde você pode fazer alterações livremente.',
+    acao: { label: 'Acessar repositório', url: 'https://github.com/felipemai3r/Projeto_Udesc_Make' },
+  },
+  {
+    numero: 2,
+    icone: '📂',
+    titulo: 'Crie a pasta do projeto',
+    descricao: 'Dentro da pasta "projetos/", crie um novo diretório com o nome do seu projeto em letras minúsculas e sem espaços.',
+    detalhe: 'Use hífens para separar palavras. Exemplo: "projetos/robo-seguidor-linha/"',
+    acao: null,
+  },
+  {
+    numero: 3,
+    icone: '📋',
+    titulo: 'Adicione os arquivos',
+    descricao: 'Coloque o arquivo "index.md" e as imagens dentro da pasta criada. Use nosso formulário para gerar os arquivos automaticamente.',
+    detalhe: 'O arquivo .md deve ter o cabeçalho YAML com todos os metadados do projeto. As imagens devem estar na mesma pasta.',
+    acao: { label: 'Usar o formulário', url: '/enviar' },
+  },
+  {
+    numero: 4,
+    icone: '🔀',
+    titulo: 'Abra um Pull Request',
+    descricao: 'No seu fork, clique em "Contribute" e depois "Open Pull Request" para enviar suas alterações para revisão.',
+    detalhe: 'Descreva brevemente o projeto no campo de descrição do PR. Nossa equipe vai revisar e aprovar em breve.',
+    acao: null,
+  },
+  {
+    numero: 5,
+    icone: '🔍',
+    titulo: 'Aguarde a revisão',
+    descricao: 'Nossa equipe vai revisar o conteúdo do seu projeto para garantir que está de acordo com as diretrizes da plataforma.',
+    detalhe: 'O processo de revisão leva normalmente até 48 horas. Você receberá uma notificação no GitHub quando o PR for aprovado.',
+    acao: null,
+  },
+  {
+    numero: 6,
+    icone: '🚀',
+    titulo: 'Projeto publicado!',
+    descricao: 'Após a aprovação, o GitHub Actions faz o build automaticamente e seu projeto aparece na plataforma em minutos.',
+    detalhe: 'O site é reconstruído automaticamente a cada PR aceito. Nenhuma ação adicional é necessária da sua parte.',
+    acao: null,
+  },
+]
+---
+
+<Layout title="Como Contribuir">
+
+  <!-- HERO -->
+  <section class="bg-green-800 text-white text-center" style="padding: 56px 24px;">
+    <h1 class="text-3xl font-bold">Como Contribuir</h1>
+    <p class="mt-3 text-green-200 text-lg" style="max-width:560px; margin: 12px auto 0;">
+      Compartilhe seu projeto maker com a comunidade UDESC em 6 passos simples
+    </p>
+  </section>
+
+  <div style="max-width: 900px; margin: 0 auto; padding: 64px 48px;">
+
+    <!-- FLUXO VISUAL -->
+    <div style="max-width: 640px; margin: 0 auto;">
+      {passos.map((passo, i) => (
+        <div style="display:flex; gap:20px; margin-bottom: 8px;">
+
+          <!-- Número + linha -->
+          <div style="display:flex; flex-direction:column; align-items:center; width:44px; flex-shrink:0;">
+            <div style={`width:44px; height:44px; min-width:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:0.875rem; background:${passo.numero === 6 ? '#054B28' : '#139954'};`}>
+              {passo.numero === 6 ? '✓' : passo.numero}
+            </div>
+            {i < passos.length - 1 && (
+              <div style="width:2px; flex:1; background:#d1fae5; min-height:40px; margin:6px 0;"></div>
+            )}
+          </div>
+
+          <!-- Conteúdo -->
+          <div style="flex:1; padding-bottom:28px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="font-size:1.2rem;">{passo.icone}</span>
+              <h3 style="font-weight:700; color:#111827; font-size:1rem; margin:0;">{passo.titulo}</h3>
+            </div>
+            <p style="color:#4b5563; font-size:0.875rem; margin:0 0 4px 0; line-height:1.5;">{passo.descricao}</p>
+            <p style="color:#9ca3af; font-size:0.75rem; margin:0 0 12px 0; line-height:1.5;">{passo.detalhe}</p>
+            {passo.acao && (
+              <a href={passo.acao.url}
+                style="display:inline-flex; align-items:center; gap:8px; background:#166534; color:white; padding:8px 16px; border-radius:8px; font-size:0.875rem; font-weight:500; text-decoration:none; white-space:nowrap;">
+                {passo.acao.label}
+                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </a>
+            )}
+          </div>
+
+        </div>
+      ))}
+    </div>
+
+    <!-- YAML -->
+    <div style="margin-top:64px; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden;">
+      <div style="background:#111827; padding:16px 24px; display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="display:flex; gap:6px;">
+            <div style="width:12px; height:12px; border-radius:50%; background:#ef4444;"></div>
+            <div style="width:12px; height:12px; border-radius:50%; background:#eab308;"></div>
+            <div style="width:12px; height:12px; border-radius:50%; background:#22c55e;"></div>
+          </div>
+          <span style="color:#9ca3af; font-size:0.875rem; font-family:monospace;">index.md</span>
+        </div>
+        <span style="color:#6b7280; font-size:0.75rem;">Exemplo de cabeçalho YAML</span>
+      </div>
+      <pre style="background:#030712; color:#4ade80; font-size:0.8rem; font-family:monospace; padding:24px; overflow-x:auto; margin:0; line-height:1.7;"><code>{`---
+title: "Nome do seu projeto"
+resumo: "Uma frase que resume o projeto"
+autor: "Seu Nome"
+email: "seu@email.com"
+data: "2026-03-29"
+categoria: "Eletrônica"
+idade: "+10 Anos"
+dificuldade: "Iniciante"
+duracao: "1-3 horas"
+capa: "./capa.jpg"
+tags: ["arduino", "sensores"]
+---
+
+## Sobre o Projeto
+Descrição completa do projeto aqui...
+
+## Passo a Passo
+
+### Passo 1: Título do passo
+Descrição do que deve ser feito.
+![Imagem do passo](./passo-1.jpg)`}</code></pre>
+    </div>
+
+    <!-- ESTRUTURA DE PASTAS -->
+    <div style="margin-top:24px; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden;">
+      <div style="background:#111827; padding:16px 24px; display:flex; align-items:center; gap:12px;">
+        <div style="display:flex; gap:6px;">
+          <div style="width:12px; height:12px; border-radius:50%; background:#ef4444;"></div>
+          <div style="width:12px; height:12px; border-radius:50%; background:#eab308;"></div>
+          <div style="width:12px; height:12px; border-radius:50%; background:#22c55e;"></div>
+        </div>
+        <span style="color:#9ca3af; font-size:0.875rem; font-family:monospace;">Estrutura de pastas</span>
+      </div>
+      <pre style="background:#030712; color:#4ade80; font-size:0.8rem; font-family:monospace; padding:24px; overflow-x:auto; margin:0; line-height:1.7;"><code>{`projetos/
+└── meu-projeto-incrivel/
+    ├── index.md        ← conteúdo + metadados
+    ├── capa.jpg        ← imagem de capa
+    ├── passo-1.jpg     ← imagem do passo 1
+    ├── passo-2.jpg     ← imagem do passo 2
+    └── resultado.jpg   ← imagem do resultado final`}</code></pre>
+    </div>
+
+    <!-- CTA -->
+    <div style="margin-top:48px; background:#f0fdf4; border-radius:16px; padding:40px; text-align:center;">
+      <h2 style="font-size:1.25rem; font-weight:700; color:#14532d; margin:0 0 8px 0;">Ficou com dúvidas?</h2>
+      <p style="color:#166534; margin:0 0 24px 0;">Use nosso formulário para gerar os arquivos automaticamente — sem precisar escrever o YAML na mão.</p>
+      <a href="/enviar"
+        style="display:inline-flex; align-items:center; gap:8px; background:#166534; color:white; padding:12px 32px; border-radius:8px; font-weight:600; text-decoration:none; font-size:0.875rem;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Usar o formulário de envio
+      </a>
+    </div>
+
+  </div>
+
+</Layout>
