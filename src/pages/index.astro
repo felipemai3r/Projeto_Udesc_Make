@@ -35,7 +35,7 @@ const baseUrl = import.meta.env.BASE_URL
       playsinline
       class="absolute inset-0 w-full h-full object-cover opacity-80 transition-opacity duration-[2000ms] ease-in-out scale-105"
     >
-      <source src="/videos/video1.mp4" type="video/mp4" />
+      <source src={`${import.meta.env.BASE_URL}videos/video1.mp4`} type="video/mp4" />
     </video>
 
     <!-- Vídeo B -->
@@ -47,7 +47,7 @@ const baseUrl = import.meta.env.BASE_URL
       playsinline
       class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-[2000ms] ease-in-out scale-105"
     >
-      <source src="/videos/video2.mp4" type="video/mp4" />
+      <source src={`${import.meta.env.BASE_URL}videos/video2.mp4`} type="video/mp4" />
     </video>
 
     <!-- Camada de suavização -->
@@ -449,11 +449,11 @@ renderizar()
 
 // ── HERO VIDEO ───────────────────────────────────────
 const heroVideos = [
-  "/videos/video1.mp4",
-  "/videos/video2.mp4",
-  "/videos/video3.mp4",
-  "/videos/video4.mp4",
-  "/videos/video5.mp4"
+  `${baseUrl}videos/video1.mp4`,
+  `${baseUrl}videos/video2.mp4`,
+  `${baseUrl}videos/video3.mp4`,
+  `${baseUrl}videos/video4.mp4`,
+  `${baseUrl}videos/video5.mp4`,
 ]
 
 const videoA = document.getElementById("hero-video-a")
