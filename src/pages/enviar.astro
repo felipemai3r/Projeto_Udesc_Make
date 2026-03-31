@@ -543,7 +543,7 @@ import Layout from '../layouts/Layout.astro'
   function gerarMarkdown(slug: string): string {
     const hoje = new Date().toISOString().split('T')[0]
     const capaRef = capaFile
-      ? `./capa${capaFile.name.substring(capaFile.name.lastIndexOf('.'))}`
+      ? `./projetos/${slug}/capa${capaFile.name.substring(capaFile.name.lastIndexOf('.'))}`
       : val('capa-url') || ''
 
     const passosMarkdown = passos.map((p, i) => {

@@ -8,7 +8,7 @@ categoria: "Outros"
 idade: "+5 Anos"
 dificuldade: "Iniciante"
 duracao: "-30 Minutos"
-capa: "./capa.png"
+capa: "./projetos/projeto-novo/capa.png"
 tags: ["teste", "software"]
 ---
 
