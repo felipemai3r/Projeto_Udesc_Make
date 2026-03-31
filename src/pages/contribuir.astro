@@ -24,7 +24,7 @@ const passos = [
     titulo: 'Adicione os arquivos',
     descricao: 'Coloque o arquivo "index.md" e as imagens dentro da pasta criada. Use nosso formulário para gerar os arquivos automaticamente.',
     detalhe: 'O arquivo .md deve ter o cabeçalho YAML com todos os metadados do projeto. As imagens devem estar na mesma pasta.',
-    acao: { label: 'Usar o formulário', url: '/enviar' },
+    acao: { label: 'Usar o formulário', url: `${import.meta.env.BASE_URL}enviar` },
   },
   {
     numero: 4,
@@ -163,7 +163,7 @@ Descrição do que deve ser feito.
     <div style="margin-top:48px; background:#f0fdf4; border-radius:16px; padding:40px; text-align:center;">
       <h2 style="font-size:1.25rem; font-weight:700; color:#14532d; margin:0 0 8px 0;">Ficou com dúvidas?</h2>
       <p style="color:#166534; margin:0 0 24px 0;">Use nosso formulário para gerar os arquivos automaticamente — sem precisar escrever o YAML na mão.</p>
-      <a href="/enviar"
+      <a href={`${import.meta.env.BASE_URL}enviar`}
         style="display:inline-flex; align-items:center; gap:8px; background:#166534; color:white; padding:12px 32px; border-radius:8px; font-weight:600; text-decoration:none; font-size:0.875rem;">
         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>

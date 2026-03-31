@@ -1,11 +1,11 @@
 ---
-import '../styles/global.css'
+import "../styles/global.css";
 
 interface Props {
-  title?: string
+  title?: string;
 }
 
-const { title = 'UDESC Maker' } = Astro.props
+const { title = "UDESC Maker" } = Astro.props;
 ---
 
 <!doctype html>
@@ -18,12 +18,28 @@ const { title = 'UDESC Maker' } = Astro.props
     <title>{title} | UDESC Maker</title>
   </head>
   <body class="bg-white text-gray-900 font-sans">
-    <header class="flex items-center justify-between px-8 py-4 border-b border-gray-100">
-      <a href="/" class="text-xl font-bold text-green-800">UDESC Maker</a>
+    <header
+      class="flex items-center justify-between px-8 py-4 border-b border-gray-100"
+    >
+      <a
+        href={`${import.meta.env.BASE_URL}`}
+        class="text-xl font-bold text-green-800">UDESC Maker</a
+      >
       <nav class="flex items-center gap-6">
-        <a href="/" class="text-gray-700 hover:text-green-800 transition-colors">Projetos</a>
-        <a href="/contribuir" class="text-gray-700 hover:text-green-800 transition-colors">Como Contribuir</a>
-        <a href="/enviar" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors font-medium">
+        <a
+          href={`${import.meta.env.BASE_URL}`}
+          class="text-gray-700 hover:text-green-800 transition-colors"
+          >Projetos</a
+        >
+        <a
+          href={`${import.meta.env.BASE_URL}contribuir`}
+          class="text-gray-700 hover:text-green-800 transition-colors"
+          >Como Contribuir</a
+        >
+        <a
+          href={`${import.meta.env.BASE_URL}enviar`}
+          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+        >
           Enviar Projeto
         </a>
       </nav>
@@ -35,8 +51,12 @@ const { title = 'UDESC Maker' } = Astro.props
 
     <footer class="bg-green-50 py-8 text-center mt-16">
       <p class="text-green-800 font-bold text-sm">UDESC MAKER</p>
-      <p class="text-green-700 text-sm">Plataforma colaborativa de projetos maker da UDESC</p>
-      <p class="text-gray-500 text-xs mt-3">© 2026 UDESC Maker. Todos os direitos reservados.</p>
+      <p class="text-green-700 text-sm">
+        Plataforma colaborativa de projetos maker da UDESC
+      </p>
+      <p class="text-gray-500 text-xs mt-3">
+        © 2026 UDESC Maker. Todos os direitos reservados.
+      </p>
     </footer>
   </body>
 </html>
