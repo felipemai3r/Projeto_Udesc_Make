@@ -1,0 +1,66 @@
+name: Deploy UDESC Maker
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+jobs:
+  deploy:
+    # Roda no push direto na main OU quando um PR for mergeado
+    if: github.event_name == 'push' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Copiar imagens dos projetos para public
+        run: |
+          mkdir -p public/projetos
+          for projeto in src/content/projetos/*/; do
+            nome=$(basename "$projeto")
+            mkdir -p "public/projetos/$nome"
+            # Copia todos os arquivos exceto o index.md
+            find "$projeto" -type f ! -name "index.md" -exec cp {} "public/projetos/$nome/" \;
+          done
+          echo "Imagens copiadas com sucesso!"
+          ls -la public/projetos/
+
+      - name: Build do Astro
+        run: npm run build
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload dos arquivos para Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+      - name: Deploy no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
