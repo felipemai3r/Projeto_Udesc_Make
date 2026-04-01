@@ -26,7 +26,20 @@ const nivelCor: Record<string, string> = {
     Intermediário: "text-yellow-600",
     Avançado: "text-red-500",
 };
+
 ---
+
+<script>
+  const button = document.getElementById("compartilhar");
+
+  button?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+    } catch (error) {
+      console.error(error);
+    }
+  });
+</script>
 
 <Layout title={title}>
     <!-- HERO -->
@@ -151,6 +164,7 @@ const nivelCor: Record<string, string> = {
 
             <div class="flex gap-2 flex-shrink-0 mt-2 mb-2">
                 <button
+                id="compartilhar"
                     class="flex items-center gap-2 border border-green-600 text-green-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-50 transition-colors"
                 >
                     <svg
