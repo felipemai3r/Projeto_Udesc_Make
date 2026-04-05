@@ -40,14 +40,16 @@ import Layout from '../layouts/Layout.astro'
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Título do Projeto <span class="text-red-500">*</span></label>
           <input id="titulo" type="text" placeholder="Ex: Robô de segurança"
-            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50" />
+            data-sequential-required required
+            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200" />
         </div>
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Frase de Contexto <span class="text-red-500">*</span></label>
           <p class="text-xs text-gray-400 mb-1">Uma frase que resume a ideia do projeto</p>
           <input id="resumo" type="text" placeholder="Ex: Construa seu Robô de forma simples e rápida"
-            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50" />
+            data-sequential-required required
+            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200" />
         </div>
 
         <div>
@@ -73,12 +75,14 @@ import Layout from '../layouts/Layout.astro'
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Seu Nome <span class="text-red-500">*</span></label>
             <input id="autor" type="text" placeholder="Nome completo"
-              class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50" />
+              data-sequential-required required
+              class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Seu e-mail <span class="text-red-500">*</span></label>
             <input id="email" type="email" placeholder="seu@email.com"
-              class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50" />
+              data-sequential-required required
+              class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200" />
           </div>
         </div>
 
@@ -105,13 +109,14 @@ import Layout from '../layouts/Layout.astro'
           <label class="block text-sm font-medium text-gray-700 mb-1">Descrição do Projeto <span class="text-red-500">*</span></label>
           <p class="text-xs text-gray-400 mb-1">Descreva o que é o projeto, seu objetivo e o que será aprendido</p>
           <textarea id="descricao" rows="6" placeholder="Descreva seu projeto em detalhes..."
-            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50 resize-none"></textarea>
+            data-sequential-required required
+            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50 resize-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200"></textarea>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Categoria <span class="text-red-500">*</span></label>
-            <select id="categoria" class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50">
+            <select id="categoria" data-sequential-required required class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200">
               <option value="">Selecione...</option>
               <option>Eletrônica</option><option>Robótica</option><option>Impressão 3D</option>
               <option>Programação</option><option>Marcenaria</option><option>Costura</option>
@@ -131,14 +136,14 @@ import Layout from '../layouts/Layout.astro'
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Dificuldade <span class="text-red-500">*</span></label>
-            <select id="dificuldade" class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50">
+            <select id="dificuldade" data-sequential-required required class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200">
               <option value="">Selecione...</option>
               <option>Iniciante</option><option>Intermediário</option><option>Avançado</option>
             </select>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Duração Estimada <span class="text-red-500">*</span></label>
-            <select id="duracao" class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50">
+            <select id="duracao" data-sequential-required required class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200">
               <option value="">Selecione...</option>
               <option>-30 Minutos</option><option>-1hora</option><option>1-3 horas</option>
               <option>Meio dia</option><option>1 dia</option><option>+1 dia</option>
@@ -171,7 +176,7 @@ import Layout from '../layouts/Layout.astro'
           <a href="#" class="text-sm text-green-600 hover:underline">Ler termos completos</a>
         </div>
         <label class="flex items-start gap-3 cursor-pointer">
-          <input id="aceite-termos" type="checkbox" class="mt-0.5 w-4 h-4 flex-shrink-0" />
+          <input id="aceite-termos" type="checkbox" data-sequential-required required class="mt-0.5 w-4 h-4 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed" />
           <span class="text-sm text-gray-600">
             Li e aceito os <a href="#" class="text-green-600 font-medium hover:underline">Termos de Uso</a> da plataforma UDESC Maker e declaro que o conteúdo enviado está em conformidade com as diretrizes. <span class="text-red-500">*</span>
           </span>
@@ -208,7 +213,7 @@ import Layout from '../layouts/Layout.astro'
         Anterior
       </button>
       <button id="btn-proximo"
-        class="flex items-center gap-2 bg-green-800 hover:bg-green-900 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+        class="flex items-center gap-2 bg-green-800 hover:bg-green-900 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-green-800">
         Próximo
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -262,6 +267,47 @@ import Layout from '../layouts/Layout.astro'
     el.textContent = msg
   }
 
+  type CampoObrigatorioSequencial = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+
+  function camposObrigatoriosSequenciais(): CampoObrigatorioSequencial[] {
+    return Array.from(document.querySelectorAll('[data-sequential-required]')) as CampoObrigatorioSequencial[]
+  }
+
+  function campoSequencialPreenchido(campo: CampoObrigatorioSequencial): boolean {
+    if (campo instanceof HTMLInputElement && campo.type === 'checkbox') return campo.checked
+    return campo.value.trim() !== ''
+  }
+
+  function atualizarEstadoBotaoProximo() {
+    const btnProximo = document.getElementById('btn-proximo') as HTMLButtonElement | null
+    if (!btnProximo || etapaAtual === totalEtapas) return
+
+    const camposDaEtapa = Array.from(
+      document.querySelectorAll(`#etapa-${etapaAtual} [data-sequential-required]`)
+    ) as CampoObrigatorioSequencial[]
+
+    btnProximo.disabled = !camposDaEtapa.every(campoSequencialPreenchido)
+  }
+
+  function atualizarCamposObrigatoriosSequenciais() {
+    const campos = camposObrigatoriosSequenciais()
+
+    campos.forEach((campo, index) => {
+      const bloqueado = index > 0 && !campoSequencialPreenchido(campos[index - 1])
+      campo.disabled = bloqueado
+      campo.setAttribute('aria-disabled', bloqueado ? 'true' : 'false')
+    })
+
+    atualizarEstadoBotaoProximo()
+  }
+
+  function registrarEventosCamposObrigatorios() {
+    camposObrigatoriosSequenciais().forEach(campo => {
+      campo.addEventListener('input', atualizarCamposObrigatoriosSequenciais)
+      campo.addEventListener('change', atualizarCamposObrigatoriosSequenciais)
+    })
+  }
+
   // ── STEPPER ───────────────────────────────────────────
   function atualizarStepper() {
     document.querySelectorAll('.step-item').forEach(el => {
@@ -295,6 +341,7 @@ import Layout from '../layouts/Layout.astro'
     if (n === 4) renderizarPreview()
 
     atualizarStepper()
+    atualizarCamposObrigatoriosSequenciais()
   }
 
   document.getElementById('btn-proximo')?.addEventListener('click', () => {
@@ -654,5 +701,6 @@ ${passosMarkdown}
   })
 
   // ── INIT ──────────────────────────────────────────────
+  registrarEventosCamposObrigatorios()
   mostrarEtapa(1)
 </script>
