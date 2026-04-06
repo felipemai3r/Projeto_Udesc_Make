@@ -1,5 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro'
+
+const termosUrl = `${import.meta.env.BASE_URL}termos-de-uso`
 ---
 
 <Layout title="Enviar Projeto">
@@ -173,12 +175,12 @@ import Layout from '../layouts/Layout.astro'
       <div class="border border-gray-200 rounded-xl p-6 mb-6">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-semibold text-gray-900">Termos de Uso</h3>
-          <a href="#" class="text-sm text-green-600 hover:underline">Ler termos completos</a>
+          <a href={termosUrl} target="_blank" rel="noopener noreferrer" class="text-sm text-green-600 hover:underline">Ler termos completos</a>
         </div>
         <label class="flex items-start gap-3 cursor-pointer">
           <input id="aceite-termos" type="checkbox" data-sequential-required required class="mt-0.5 w-4 h-4 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed" />
           <span class="text-sm text-gray-600">
-            Li e aceito os <a href="#" class="text-green-600 font-medium hover:underline">Termos de Uso</a> da plataforma UDESC Maker e declaro que o conteúdo enviado está em conformidade com as diretrizes. <span class="text-red-500">*</span>
+            Li e aceito os <a href={termosUrl} target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-green-600 font-medium hover:underline">Termos de Uso</a> da plataforma UDESC Maker e declaro que o conteúdo enviado está em conformidade com as diretrizes. <span class="text-red-500">*</span>
           </span>
         </label>
       </div>
