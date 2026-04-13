@@ -109,10 +109,17 @@ const termosUrl = `${import.meta.env.BASE_URL}termos-de-uso`
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Descrição do Projeto <span class="text-red-500">*</span></label>
-          <p class="text-xs text-gray-400 mb-1">Descreva o que é o projeto, seu objetivo e o que será aprendido</p>
-          <textarea id="descricao" rows="6" placeholder="Descreva seu projeto em detalhes..."
-            data-sequential-required required
-            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50 resize-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200"></textarea>
+          <p class="text-xs text-gray-400 mb-2">Descreva o que é o projeto, seu objetivo e o que será aprendido. Use os botões para aplicar formatação em Markdown.</p>
+          <div class="border border-gray-200 rounded-xl bg-white p-3" data-markdown-editor-root>
+            <div class="flex flex-wrap gap-2 mb-3" data-markdown-toolbar></div>
+            <textarea id="descricao" rows="6" placeholder="Descreva seu projeto em detalhes..."
+              data-sequential-required required
+              class="markdown-editor-textarea w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none bg-gray-50 resize-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200"></textarea>
+            <div class="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400 mb-2">Prévia da formatação</p>
+              <div class="markdown-preview-content min-h-16 text-sm text-gray-600" data-markdown-preview></div>
+            </div>
+          </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
@@ -245,6 +252,15 @@ const termosUrl = `${import.meta.env.BASE_URL}termos-de-uso`
   let capaFile: File | null = null
 
   // ── HELPERS ───────────────────────────────────────────
+  function escaparHtml(str: string): string {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+  }
+
   function val(id: string): string {
     const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     return el?.value?.trim() || ''
@@ -301,6 +317,7 @@ const termosUrl = `${import.meta.env.BASE_URL}termos-de-uso`
     })
 
     atualizarEstadoBotaoProximo()
+    atualizarEstadoToolbarsMarkdown()
   }
 
   function registrarEventosCamposObrigatorios() {
@@ -308,6 +325,394 @@ const termosUrl = `${import.meta.env.BASE_URL}termos-de-uso`
       campo.addEventListener('input', atualizarCamposObrigatoriosSequenciais)
       campo.addEventListener('change', atualizarCamposObrigatoriosSequenciais)
     })
+  }
+
+  // ── EDITOR MARKDOWN ───────────────────────────────────
+  const botoesMarkdown = [
+    { acao: 'bold', rotulo: 'B', titulo: 'Negrito' },
+    { acao: 'italic', rotulo: 'I', titulo: 'Itálico' },
+    { acao: 'heading', rotulo: 'H3', titulo: 'Subtítulo' },
+    { acao: 'list', rotulo: '• Lista', titulo: 'Lista com marcadores' },
+    { acao: 'ordered-list', rotulo: '1. Lista', titulo: 'Lista numerada' },
+    { acao: 'table', rotulo: 'Tabela', titulo: 'Inserir tabela' },
+    { acao: 'link', rotulo: 'Link', titulo: 'Inserir link' },
+    { acao: 'code', rotulo: '{ }', titulo: 'Código' },
+  ] as const
+
+  function obterToolbarMarkdownHtml(): string {
+    return botoesMarkdown.map(botao => `
+      <button type="button"
+        class="markdown-toolbar-button px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 hover:border-green-500 hover:text-green-700 text-xs font-semibold text-gray-600 transition-colors"
+        data-md-action="${botao.acao}"
+        title="${botao.titulo}"
+        aria-label="${botao.titulo}">
+        ${botao.rotulo}
+      </button>
+    `).join('')
+  }
+
+  function aplicarPrefixoNasLinhas(texto: string, prefixo: (index: number) => string): string {
+    return texto
+      .split('\n')
+      .map((linha, index) => `${prefixo(index)}${linha || 'Item'}`)
+      .join('\n')
+  }
+
+  function atualizarValorTextarea(
+    textarea: HTMLTextAreaElement,
+    valor: string,
+    selecaoInicio: number,
+    selecaoFim: number,
+  ) {
+    textarea.value = valor
+    textarea.focus()
+    textarea.setSelectionRange(selecaoInicio, selecaoFim)
+    textarea.dispatchEvent(new Event('input', { bubbles: true }))
+  }
+
+  function aplicarFormatacaoMarkdown(textarea: HTMLTextAreaElement, acao: string) {
+    if (textarea.disabled) return
+
+    const inicio = textarea.selectionStart ?? 0
+    const fim = textarea.selectionEnd ?? 0
+    const antes = textarea.value.slice(0, inicio)
+    const selecionado = textarea.value.slice(inicio, fim)
+    const depois = textarea.value.slice(fim)
+    const quebraAntes = inicio > 0 && !antes.endsWith('\n') ? '\n' : ''
+
+    let insercao = ''
+    let selecaoInicio = inicio
+    let selecaoFim = fim
+
+    if (acao === 'bold') {
+      const conteudo = selecionado || 'texto em negrito'
+      insercao = `**${conteudo}**`
+      selecaoInicio = inicio + 2
+      selecaoFim = selecaoInicio + conteudo.length
+    } else if (acao === 'italic') {
+      const conteudo = selecionado || 'texto em itálico'
+      insercao = `*${conteudo}*`
+      selecaoInicio = inicio + 1
+      selecaoFim = selecaoInicio + conteudo.length
+    } else if (acao === 'heading') {
+      const conteudo = selecionado || 'Título da seção'
+      insercao = `${quebraAntes}### ${conteudo}`
+      selecaoInicio = inicio + quebraAntes.length + 4
+      selecaoFim = selecaoInicio + conteudo.length
+    } else if (acao === 'list') {
+      const conteudo = selecionado
+        ? aplicarPrefixoNasLinhas(selecionado, () => '- ')
+        : '- Primeiro item\n- Segundo item'
+      insercao = `${quebraAntes}${conteudo}`
+      selecaoInicio = inicio + quebraAntes.length
+      selecaoFim = selecaoInicio + conteudo.length
+    } else if (acao === 'ordered-list') {
+      const conteudo = selecionado
+        ? aplicarPrefixoNasLinhas(selecionado, (index) => `${index + 1}. `)
+        : '1. Primeiro item\n2. Segundo item'
+      insercao = `${quebraAntes}${conteudo}`
+      selecaoInicio = inicio + quebraAntes.length
+      selecaoFim = selecaoInicio + conteudo.length
+    } else if (acao === 'table') {
+      const conteudo = [
+        '| Coluna 1 | Coluna 2 |',
+        '| --- | --- |',
+        '| Valor 1 | Valor 2 |',
+      ].join('\n')
+      insercao = `${quebraAntes}${conteudo}`
+      selecaoInicio = inicio + quebraAntes.length + 2
+      selecaoFim = selecaoInicio + 'Coluna 1'.length
+    } else if (acao === 'link') {
+      const conteudo = selecionado || 'texto do link'
+      const url = 'https://example.com'
+      insercao = `[${conteudo}](${url})`
+      selecaoInicio = inicio + 1
+      selecaoFim = selecaoInicio + conteudo.length
+    } else if (acao === 'code') {
+      const conteudo = selecionado || 'codigo'
+      insercao = selecionado.includes('\n')
+        ? `${quebraAntes}\`\`\`\n${conteudo}\n\`\`\``
+        : `\`${conteudo}\``
+      const deslocamento = selecionado.includes('\n') ? quebraAntes.length + 4 : 1
+      selecaoInicio = inicio + deslocamento
+      selecaoFim = selecaoInicio + conteudo.length
+    } else {
+      return
+    }
+
+    atualizarValorTextarea(
+      textarea,
+      `${antes}${insercao}${depois}`,
+      selecaoInicio,
+      selecaoFim,
+    )
+  }
+
+  function markdownInlineParaHtml(texto: string): string {
+    let html = escaparHtml(texto)
+    const placeholdersCodigo: string[] = []
+
+    html = html.replace(/`([^`]+)`/g, (_, codigo: string) => {
+      const token = `__CODE_${placeholdersCodigo.length}__`
+      placeholdersCodigo.push(`<code style="background:#e5e7eb; color:#111827; padding:2px 6px; border-radius:6px; font-size:0.85em;">${codigo}</code>`)
+      return token
+    })
+
+    html = html.replace(/\[([^\]]+)\]\(((?:https?:\/\/|mailto:)[^)]+)\)/g, (_, label: string, url: string) => {
+      return `<a href="${escaparHtml(url)}" target="_blank" rel="noopener noreferrer" style="color:#15803d; text-decoration:underline;">${label}</a>`
+    })
+
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong style="font-weight:700; color:#111827;">$1</strong>')
+    html = html.replace(/\*([^*]+)\*/g, '<em style="font-style:italic;">$1</em>')
+
+    placeholdersCodigo.forEach((codigo, index) => {
+      html = html.replace(`__CODE_${index}__`, codigo)
+    })
+
+    return html
+  }
+
+  function markdownParaHtml(markdown: string): string {
+    if (!markdown.trim()) {
+      return '<p style="margin:0; color:#9ca3af;">A prévia da formatação aparece aqui.</p>'
+    }
+
+    const linhas = markdown.split(/\r?\n/)
+    const partes: string[] = []
+    const paragrafoAtual: string[] = []
+    let listaNaoOrdenadaAberta = false
+    let listaOrdenadaAberta = false
+    let blocoCodigoAberto = false
+    let linhasCodigo: string[] = []
+    let pularAte = -1
+
+    function extrairCelulasTabela(linha: string): string[] {
+      return linha
+        .trim()
+        .replace(/^\|/, '')
+        .replace(/\|$/, '')
+        .split('|')
+        .map(celula => celula.trim())
+    }
+
+    function ehSeparadorTabela(linha: string): boolean {
+      const celulas = extrairCelulasTabela(linha)
+      return celulas.length > 0 && celulas.every(celula => /^:?-{3,}:?$/.test(celula))
+    }
+
+    function estiloAlinhamentoTabela(celula: string): string {
+      const conteudo = celula.trim()
+      if (conteudo.startsWith(':') && conteudo.endsWith(':')) return 'center'
+      if (conteudo.endsWith(':')) return 'right'
+      return 'left'
+    }
+
+    function fecharParagrafo() {
+      if (!paragrafoAtual.length) return
+      partes.push(`
+        <p style="margin:0 0 12px 0; color:#374151; line-height:1.7;">
+          ${paragrafoAtual.map(markdownInlineParaHtml).join('<br />')}
+        </p>
+      `)
+      paragrafoAtual.length = 0
+    }
+
+    function fecharListas() {
+      if (listaNaoOrdenadaAberta) {
+        partes.push('</ul>')
+        listaNaoOrdenadaAberta = false
+      }
+      if (listaOrdenadaAberta) {
+        partes.push('</ol>')
+        listaOrdenadaAberta = false
+      }
+    }
+
+    function fecharBlocoCodigo() {
+      if (!blocoCodigoAberto) return
+      partes.push(`
+        <pre style="margin:0 0 12px 0; padding:12px; border-radius:12px; background:#111827; color:#f9fafb; overflow:auto; font-size:0.85rem;"><code>${escaparHtml(linhasCodigo.join('\n'))}</code></pre>
+      `)
+      blocoCodigoAberto = false
+      linhasCodigo = []
+    }
+
+    linhas.forEach((linhaBruta, index) => {
+      if (index <= pularAte) return
+
+      const linha = linhaBruta.trim()
+
+      if (linha.startsWith('```')) {
+        fecharParagrafo()
+        fecharListas()
+        if (blocoCodigoAberto) {
+          fecharBlocoCodigo()
+        } else {
+          blocoCodigoAberto = true
+          linhasCodigo = []
+        }
+        return
+      }
+
+      if (blocoCodigoAberto) {
+        linhasCodigo.push(linhaBruta)
+        return
+      }
+
+      if (!linha) {
+        fecharParagrafo()
+        fecharListas()
+        return
+      }
+
+      const proximaLinha = linhas[index + 1]?.trim() || ''
+      if (linha.includes('|') && ehSeparadorTabela(proximaLinha)) {
+        fecharParagrafo()
+        fecharListas()
+
+        const cabecalhos = extrairCelulasTabela(linha)
+        const alinhamentos = extrairCelulasTabela(proximaLinha).map(estiloAlinhamentoTabela)
+        const linhasTabela: string[][] = []
+        let ultimoIndiceTabela = index + 1
+
+        for (let i = index + 2; i < linhas.length; i++) {
+          const linhaTabela = linhas[i].trim()
+          if (!linhaTabela || !linhaTabela.includes('|')) break
+          linhasTabela.push(extrairCelulasTabela(linhaTabela))
+          ultimoIndiceTabela = i
+        }
+
+        const colunas = cabecalhos.length
+        const cabecalhoHtml = cabecalhos.map((cabecalho, colunaIndex) => `
+          <th style="padding:10px 12px; border:1px solid #d1d5db; background:#f3f4f6; text-align:${alinhamentos[colunaIndex] || 'left'}; font-weight:700; color:#111827;">
+            ${markdownInlineParaHtml(cabecalho)}
+          </th>
+        `).join('')
+        const corpoHtml = linhasTabela.map((linhaAtual) => {
+          const celulas = Array.from({ length: colunas }, (_, colunaIndex) => linhaAtual[colunaIndex] || '')
+          return `
+            <tr>
+              ${celulas.map((celula, colunaIndex) => `
+                <td style="padding:10px 12px; border:1px solid #d1d5db; text-align:${alinhamentos[colunaIndex] || 'left'}; color:#374151;">
+                  ${markdownInlineParaHtml(celula)}
+                </td>
+              `).join('')}
+            </tr>
+          `
+        }).join('')
+
+        partes.push(`
+          <div style="margin:0 0 12px 0; overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; min-width:320px;">
+              <thead><tr>${cabecalhoHtml}</tr></thead>
+              <tbody>${corpoHtml}</tbody>
+            </table>
+          </div>
+        `)
+
+        pularAte = ultimoIndiceTabela
+        return
+      }
+
+      if (/^###\s+/.test(linha)) {
+        fecharParagrafo()
+        fecharListas()
+        partes.push(`<h4 style="margin:0 0 12px 0; font-size:1rem; font-weight:700; color:#111827;">${markdownInlineParaHtml(linha.replace(/^###\s+/, ''))}</h4>`)
+        return
+      }
+
+      if (/^##\s+/.test(linha)) {
+        fecharParagrafo()
+        fecharListas()
+        partes.push(`<h3 style="margin:0 0 12px 0; font-size:1.1rem; font-weight:700; color:#111827;">${markdownInlineParaHtml(linha.replace(/^##\s+/, ''))}</h3>`)
+        return
+      }
+
+      if (/^#\s+/.test(linha)) {
+        fecharParagrafo()
+        fecharListas()
+        partes.push(`<h2 style="margin:0 0 12px 0; font-size:1.2rem; font-weight:700; color:#111827;">${markdownInlineParaHtml(linha.replace(/^#\s+/, ''))}</h2>`)
+        return
+      }
+
+      if (/^>\s+/.test(linha)) {
+        fecharParagrafo()
+        fecharListas()
+        partes.push(`<blockquote style="margin:0 0 12px 0; padding-left:12px; border-left:3px solid #86efac; color:#4b5563;">${markdownInlineParaHtml(linha.replace(/^>\s+/, ''))}</blockquote>`)
+        return
+      }
+
+      if (/^\d+\.\s+/.test(linha)) {
+        fecharParagrafo()
+        if (listaNaoOrdenadaAberta) {
+          partes.push('</ul>')
+          listaNaoOrdenadaAberta = false
+        }
+        if (!listaOrdenadaAberta) {
+          partes.push('<ol style="margin:0 0 12px 20px; color:#374151;">')
+          listaOrdenadaAberta = true
+        }
+        partes.push(`<li style="margin-bottom:6px;">${markdownInlineParaHtml(linha.replace(/^\d+\.\s+/, ''))}</li>`)
+        return
+      }
+
+      if (/^[-*]\s+/.test(linha)) {
+        fecharParagrafo()
+        if (listaOrdenadaAberta) {
+          partes.push('</ol>')
+          listaOrdenadaAberta = false
+        }
+        if (!listaNaoOrdenadaAberta) {
+          partes.push('<ul style="margin:0 0 12px 20px; color:#374151; list-style:disc;">')
+          listaNaoOrdenadaAberta = true
+        }
+        partes.push(`<li style="margin-bottom:6px;">${markdownInlineParaHtml(linha.replace(/^[-*]\s+/, ''))}</li>`)
+        return
+      }
+
+      paragrafoAtual.push(linha)
+    })
+
+    fecharParagrafo()
+    fecharListas()
+    fecharBlocoCodigo()
+
+    return partes.join('')
+  }
+
+  function preencherToolbarsMarkdown(container: ParentNode = document) {
+    container.querySelectorAll('[data-markdown-toolbar]').forEach((toolbar) => {
+      if ((toolbar as HTMLElement).childElementCount > 0) return
+      ;(toolbar as HTMLElement).innerHTML = obterToolbarMarkdownHtml()
+    })
+  }
+
+  function atualizarEstadoToolbarsMarkdown(container: ParentNode = document) {
+    container.querySelectorAll('[data-markdown-editor-root]').forEach((root) => {
+      const textarea = root.querySelector('.markdown-editor-textarea') as HTMLTextAreaElement | null
+      if (!textarea) return
+      root.querySelectorAll('[data-md-action]').forEach((botao) => {
+        const el = botao as HTMLButtonElement
+        el.disabled = textarea.disabled
+        el.classList.toggle('opacity-50', textarea.disabled)
+        el.classList.toggle('cursor-not-allowed', textarea.disabled)
+      })
+    })
+  }
+
+  function atualizarPreviewMarkdown(textarea: HTMLTextAreaElement) {
+    const root = textarea.closest('[data-markdown-editor-root]')
+    const preview = root?.querySelector('[data-markdown-preview]') as HTMLElement | null
+    if (!preview) return
+    preview.innerHTML = markdownParaHtml(textarea.value)
+  }
+
+  function atualizarPreviewsMarkdown(container: ParentNode = document) {
+    preencherToolbarsMarkdown(container)
+    container.querySelectorAll('.markdown-editor-textarea').forEach((textarea) => {
+      atualizarPreviewMarkdown(textarea as HTMLTextAreaElement)
+    })
+    atualizarEstadoToolbarsMarkdown(container)
   }
 
   // ── STEPPER ───────────────────────────────────────────
@@ -446,14 +851,22 @@ const termosUrl = `${import.meta.env.BASE_URL}termos-de-uso`
           </div>
         </div>
 
-        <input type="text" placeholder="Título do passo" value="${p.titulo}"
+        <input type="text" placeholder="Título do passo" value="${escaparHtml(p.titulo)}"
           class="passo-titulo w-full border border-gray-200 rounded-lg px-4 py-3 text-sm mb-3 outline-none bg-gray-50" />
-        <textarea rows="4" placeholder="Descrição do que deve ser feito"
-          class="passo-descricao w-full border border-gray-200 rounded-lg px-4 py-3 text-sm mb-3 outline-none bg-gray-50 resize-none">${p.descricao}</textarea>
+        <p class="text-xs text-gray-400 mb-2">Use os botões abaixo para aplicar formatação em Markdown na descrição do passo.</p>
+        <div class="border border-gray-200 rounded-xl bg-gray-50 p-3 mb-3" data-markdown-editor-root>
+          <div class="flex flex-wrap gap-2 mb-3" data-markdown-toolbar></div>
+          <textarea rows="4" placeholder="Descrição do que deve ser feito"
+            class="passo-descricao markdown-editor-textarea w-full border border-gray-200 rounded-lg px-4 py-3 text-sm mb-3 outline-none bg-white resize-none">${escaparHtml(p.descricao)}</textarea>
+          <div class="rounded-lg border border-gray-200 bg-white p-4">
+            <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400 mb-2">Prévia da formatação</p>
+            <div class="markdown-preview-content min-h-16 text-sm text-gray-600" data-markdown-preview></div>
+          </div>
+        </div>
 
         <label class="block text-sm text-gray-600 mb-1">Imagem da etapa</label>
         <div class="flex gap-2 mb-2">
-          <input type="text" placeholder="URL da imagem" value="${p.url}"
+          <input type="text" placeholder="URL da imagem" value="${escaparHtml(p.url)}"
             class="passo-url flex-1 border border-gray-200 rounded-lg px-4 py-2 text-sm outline-none bg-gray-50" />
           <label class="flex items-center gap-1 bg-green-700 text-white px-3 py-2 rounded-lg text-xs font-medium cursor-pointer hover:bg-green-800 transition-colors">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -464,7 +877,7 @@ const termosUrl = `${import.meta.env.BASE_URL}termos-de-uso`
           </label>
         </div>
         <div class="passo-preview-container" id="passo-preview-${i}">
-          ${p.arquivo ? `<p class="text-xs text-gray-400 mt-1">✓ ${p.arquivo.name}</p>` : ''}
+          ${p.arquivo ? `<p class="text-xs text-gray-400 mt-1">✓ ${escaparHtml(p.arquivo.name)}</p>` : ''}
         </div>
 
         <label class="block text-sm text-gray-600 mb-1 mt-3">
@@ -472,7 +885,7 @@ const termosUrl = `${import.meta.env.BASE_URL}termos-de-uso`
           <span class="text-gray-400 text-xs">(PDF, .ino, .py, .cpp, .zip, etc)</span>
         </label>
         <div class="flex gap-2 mb-2">
-          <input type="text" placeholder="Nenhum arquivo selecionado" value="${p.anexoNome}"
+          <input type="text" placeholder="Nenhum arquivo selecionado" value="${escaparHtml(p.anexoNome)}"
             class="passo-anexo-nome flex-1 border border-gray-200 rounded-lg px-4 py-2 text-sm outline-none bg-gray-50" readonly />
           <label class="flex items-center gap-1 bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-colors">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -485,7 +898,7 @@ const termosUrl = `${import.meta.env.BASE_URL}termos-de-uso`
         ${p.anexoNome ? `
           <div class="flex items-center gap-2 text-xs text-gray-500 mt-1">
             <span>📎</span>
-            <span>${p.anexoNome}</span>
+            <span>${escaparHtml(p.anexoNome)}</span>
           </div>
         ` : ''}
       </div>
@@ -498,7 +911,7 @@ const termosUrl = `${import.meta.env.BASE_URL}termos-de-uso`
         if (container2) {
           const reader = new FileReader()
           reader.onload = (ev) => {
-            container2.innerHTML = `<img src="${ev.target?.result}" class="h-24 rounded-lg object-cover border border-gray-200 mt-1" /><p class="text-xs text-gray-400 mt-1">${p.arquivo!.name}</p>`
+            container2.innerHTML = `<img src="${ev.target?.result}" class="h-24 rounded-lg object-cover border border-gray-200 mt-1" /><p class="text-xs text-gray-400 mt-1">${escaparHtml(p.arquivo!.name)}</p>`
           }
           reader.readAsDataURL(p.arquivo)
         }
@@ -554,6 +967,8 @@ const termosUrl = `${import.meta.env.BASE_URL}termos-de-uso`
         }
       })
     })
+
+    atualizarPreviewsMarkdown(container)
   }
 
   document.getElementById('btn-add-passo')?.addEventListener('click', adicionarPasso)
@@ -567,23 +982,34 @@ const termosUrl = `${import.meta.env.BASE_URL}termos-de-uso`
     const anexosCount = passos.filter(p => p.anexo).length
 
     document.getElementById('preview-card')!.innerHTML = `
-      <h3 style="font-weight:700; font-size:1.1rem; margin-bottom:8px;">${val('titulo') || 'Sem título'}</h3>
-      <p style="color:#4b5563; font-size:0.875rem; margin-bottom:8px;">${val('resumo') || '—'}</p>
-      <p style="color:#4b5563; font-size:0.875rem; margin-bottom:12px;">${val('descricao') || '—'}</p>
+      <h3 style="font-weight:700; font-size:1.1rem; margin-bottom:8px;">${escaparHtml(val('titulo') || 'Sem título')}</h3>
+      <p style="color:#4b5563; font-size:0.875rem; margin-bottom:12px;">${escaparHtml(val('resumo') || '—')}</p>
+      <div style="margin-bottom:16px;">${markdownParaHtml(val('descricao'))}</div>
       <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
-        ${tags.map(t => `<span style="color:#166534; font-size:0.8rem;">#${t}</span>`).join(' ')}
+        ${tags.map(t => `<span style="color:#166534; font-size:0.8rem;">#${escaparHtml(t)}</span>`).join(' ')}
       </div>
       <div style="display:flex; flex-wrap:wrap; gap:16px; font-size:0.875rem; color:#6b7280; margin-bottom:12px;">
-        <span>📂 ${val('categoria') || '—'}</span>
-        <span>⏱ ${val('duracao') || '—'}</span>
-        <span style="color:${nivelCor[val('dificuldade')] || '#6b7280'}; font-weight:600;">Nível: ${val('dificuldade') || '—'}</span>
-        <span style="background:#f3f4f6; padding:2px 8px; border-radius:999px; font-size:0.75rem;">${val('idade') || '—'}</span>
+        <span>📂 ${escaparHtml(val('categoria') || '—')}</span>
+        <span>⏱ ${escaparHtml(val('duracao') || '—')}</span>
+        <span style="color:${nivelCor[val('dificuldade')] || '#6b7280'}; font-weight:600;">Nível: ${escaparHtml(val('dificuldade') || '—')}</span>
+        <span style="background:#f3f4f6; padding:2px 8px; border-radius:999px; font-size:0.75rem;">${escaparHtml(val('idade') || '—')}</span>
+      </div>
+      <div style="border-top:1px solid #f3f4f6; padding-top:16px; margin-top:16px;">
+        <h4 style="margin:0 0 12px 0; font-size:0.95rem; font-weight:700; color:#111827;">Passo a passo</h4>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          ${passos.map((p, i) => `
+            <div style="border:1px solid #e5e7eb; border-radius:12px; padding:16px; background:#f9fafb;">
+              <p style="margin:0 0 8px 0; font-size:0.875rem; font-weight:700; color:#111827;">Passo ${i + 1}: ${escaparHtml(p.titulo || 'Sem título')}</p>
+              ${markdownParaHtml(p.descricao)}
+            </div>
+          `).join('')}
+        </div>
       </div>
       <div style="border-top:1px solid #f3f4f6; padding-top:12px; font-size:0.8rem; color:#6b7280; display:flex; flex-direction:column; gap:4px;">
         <span><strong>Passos:</strong> ${passos.length} | <strong>Com imagem:</strong> ${passos.filter(p => p.arquivo).length} | <strong>Com anexo:</strong> ${anexosCount}</span>
-        <span><strong>Capa:</strong> ${capaFile ? capaFile.name : val('capa-url') || 'Sem imagem'}</span>
-        <span><strong>Autor:</strong> ${val('autor') || '—'}</span>
-        <span><strong>E-mail:</strong> ${val('email') || '—'}</span>
+        <span><strong>Capa:</strong> ${escaparHtml(capaFile ? capaFile.name : val('capa-url') || 'Sem imagem')}</span>
+        <span><strong>Autor:</strong> ${escaparHtml(val('autor') || '—')}</span>
+        <span><strong>E-mail:</strong> ${escaparHtml(val('email') || '—')}</span>
       </div>
     `
   }
@@ -702,7 +1128,23 @@ ${passosMarkdown}
     // lógica da API vai aqui quando o token for configurado
   })
 
+  document.addEventListener('click', (event) => {
+    const botao = (event.target as HTMLElement).closest('[data-md-action]') as HTMLButtonElement | null
+    if (!botao) return
+    const root = botao.closest('[data-markdown-editor-root]')
+    const textarea = root?.querySelector('.markdown-editor-textarea') as HTMLTextAreaElement | null
+    if (!textarea) return
+    aplicarFormatacaoMarkdown(textarea, botao.dataset.mdAction || '')
+  })
+
+  document.addEventListener('input', (event) => {
+    const textarea = event.target as HTMLTextAreaElement | null
+    if (!textarea?.classList.contains('markdown-editor-textarea')) return
+    atualizarPreviewMarkdown(textarea)
+  })
+
   // ── INIT ──────────────────────────────────────────────
   registrarEventosCamposObrigatorios()
+  atualizarPreviewsMarkdown()
   mostrarEtapa(1)
 </script>
